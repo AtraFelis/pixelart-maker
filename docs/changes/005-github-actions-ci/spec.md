@@ -1,7 +1,7 @@
 # Spec: GitHub Actions의 잠금 설치·테스트·빌드
 
 - 입력: [intent.md](intent.md).
-- 상태: 구현·로컬 검사 완료, CodeRabbit 검토 완료, 실제 CI 확인 대기.
+- 상태: 구현·로컬 검사·최초 CI 여섯 조합 성공. CodeRabbit 추가 지적의 실행 증거 보완. 최신 CI·스레드는 PR 참조.
 
 ## 수용 기준
 

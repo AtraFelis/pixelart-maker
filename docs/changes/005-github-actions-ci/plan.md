@@ -1,7 +1,7 @@
 # Plan: 기본 GitHub Actions CI
 
 - 입력: [spec.md](spec.md).
-- 상태: 구현·로컬 검사 완료, CodeRabbit 검토 완료, 실제 CI 확인 대기.
+- 상태: 구현·로컬 검사·최초 CI 여섯 조합 성공. CodeRabbit 추가 지적의 실행 증거 보완. 최신 CI·스레드는 PR 참조.
 
 1. 공식 GitHub Python CI와 Astral setup-uv 문서·Action release SHA를 확인한다.
 2. .github/workflows/ci.yml을 추가한다. PR·main push, 읽기 권한, 취소 그룹, 여섯 OS/Python 조합, 제한 시간과 개별 검사 단계를 구성한다.
