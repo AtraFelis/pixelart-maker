@@ -7,7 +7,8 @@
 
 - 초기 구성: [000-project-bootstrap](changes/000-project-bootstrap/intent.md)
 - 첫 구현: [001-generation-spike](changes/001-generation-spike/intent.md)
-- 현재 작업: [004-pixel-model-comparison](changes/004-pixel-model-comparison/intent.md), 선택적 LoRA·VAE와 세 구성의 실제 비교.
+- 모델 비교: [004-pixel-model-comparison](changes/004-pixel-model-comparison/intent.md), 선택적 LoRA·VAE와 세 구성의 실제 비교.
+- 현재 작업: [005-github-actions-ci](changes/005-github-actions-ci/intent.md), Windows·Linux의 잠금 설치·테스트·빌드·CLI 자동 검사.
 - 실행 구조: [002-portable-execution](changes/002-portable-execution/intent.md), 다른 PC 이동과 원격·클라우드 생성 설계.
 - 현재 문서 정리: [003-remove-transcript-references](changes/003-remove-transcript-references/intent.md), 사용자가 삭제한 참고 파일의 링크·검증 의존성 제거.
 - 001은 사용자가 2026년 10월 31일 진행을 수락했다. 구체적 실행·검증 상태는 해당 evidence에서 관리한다.
@@ -70,7 +71,7 @@
 - 로컬 편집 UI와 서비스는 초기에는 루프백 접속을 사용한다. 이는 생성 서버의 로컬·원격 선택과 별개다. 원격 생성의 인증·입출력 전송·대상 서버 의존성 검사를 어댑터에 둔다.
 - 유료 생성, 모델 다운로드, 노드 설치·업데이트는 기본 실행에 숨겨 넣지 않는다. 필요할 때 작업 범위를 명시한다.
 - 원격 저장소: origin = https://github.com/AtraFelis/pixelart-maker.git (사용자 요청으로 2026년 10월 31일 연결). 기본 브랜치: main. 빈 초기 커밋을 기준으로 작업 단위별 PR 제출. 최초 시제품은 codex/001-generation-spike 브랜치.
-- .github/pull_request_template.md는 선택적 양식이며 원격·CI·브랜치 보호가 적용됐다는 뜻이 아니다.
+- .github/workflows/ci.yml로 PR·main push의 CPU 검사를 구성한다. 실제 실행 상태는 005 evidence를 따른다. PR 양식과 CodeRabbit 리뷰는 이 실행 검사와 별개이며 브랜치 보호는 아직 설정하지 않았다.
 
 ## 시작 준비
 
