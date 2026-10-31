@@ -8,7 +8,7 @@ from urllib.request import Request as HTTPRequest, HTTPRedirectHandler, build_op
 
 from pixelart.config import Profile
 from pixelart.providers.base import ProviderError, SubmissionRejected, SubmissionUnknown, job_state
-from pixelart.providers.local_mcp import CORE_NODES
+from pixelart.providers.local_mcp import CORE_NODES, OPTIONAL_NODES, required_nodes
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -51,22 +51,25 @@ class ComfyHTTP:
             return value if binary else json.loads(value)
         return await asyncio.to_thread(send)
 
-    async def preflight(self, checkpoint: str):
+    async def preflight(self, checkpoint: str, lora: str = "", vae: str = ""):
         await self.request("/system_stats")
         names = await self.request("/models/checkpoints")
         if not isinstance(names, list) or not names:
             raise ProviderError("no checkpoint found on the remote target")
         if checkpoint and checkpoint not in names:
             raise ProviderError("checkpoint not available on target: " + checkpoint)
-        for name in sorted(CORE_NODES):
+        for folder, filename in (("loras", lora), ("vae", vae)):
+            if filename and filename not in await self.request("/models/" + folder):
+                raise ProviderError(f"{folder} file not available on target: {filename}")
+        for name in sorted(required_nodes(lora, vae)):
             node = await self.request("/object_info/" + name)
             if name not in node:
                 raise ProviderError("target is missing node: " + name)
-        return {"checkpoint": checkpoint or names[0], "checkpoints": names, "provider": "comfy-http"}
+        return {"checkpoint": checkpoint or names[0], "checkpoints": names, "provider": "comfy-http", "lora": lora, "vae": vae}
 
     async def validate(self, workflow_path: Path):
         graph = json.loads(workflow_path.read_text(encoding="utf-8"))
-        if {node.get("class_type") for node in graph.values()} - CORE_NODES:
+        if {node.get("class_type") for node in graph.values()} - (CORE_NODES | OPTIONAL_NODES):
             raise ProviderError("this prototype accepts only its known, local core-node graph")
         # Full schema validation also happens at the target's /prompt endpoint.
 

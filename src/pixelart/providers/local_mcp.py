@@ -12,6 +12,11 @@ from pixelart.config import Profile
 from pixelart.providers.base import ProviderError, SubmissionUnknown, find_value, job_state
 
 CORE_NODES = {"CheckpointLoaderSimple", "CLIPTextEncode", "EmptyLatentImage", "KSampler", "VAEDecode", "SaveImage"}
+OPTIONAL_NODES = {"LoraLoader", "VAELoader"}
+
+
+def required_nodes(lora="", vae=""):
+    return CORE_NODES | ({"LoraLoader"} if lora else set()) | ({"VAELoader"} if vae else set())
 
 
 def normalize_result(result):
@@ -75,7 +80,7 @@ class LocalMCP:
     async def call(self, name, arguments):
         return normalize_result(await self.session.call_tool(name, arguments=arguments))
 
-    async def preflight(self, checkpoint: str):
+    async def preflight(self, checkpoint: str, lora: str = "", vae: str = ""):
         info = await self.call("server_info", {})
         url = info.get("server", {}).get("url", "")
         if not info.get("server", {}).get("running"):
@@ -90,15 +95,20 @@ class LocalMCP:
             raise ProviderError("checkpoint not available on target: " + checkpoint)
         if not names:
             raise ProviderError("no checkpoint found on target")
-        # A working generic graph needs only core nodes. No node install is performed.
-        for name in sorted(CORE_NODES):
+        for folder, filename in (("loras", lora), ("vae", vae)):
+            if filename:
+                catalog = await self.call("search_models", {"folder": folder})
+                if filename not in [item["name"] for item in catalog.get("files", [])]:
+                    raise ProviderError(f"{folder} file not available on target: {filename}")
+        # Check only the core nodes this request actually uses. Never install nodes here.
+        for name in sorted(required_nodes(lora, vae)):
             node = await self.call("nodes", {"action": "get", "name": name})
             if node.get("id") != name or node.get("is_api_node"):
                 raise ProviderError("missing or unsuitable node: " + name)
         return {
             "checkpoint": checkpoint or names[0], "checkpoints": names,
             "server": url, "comfy_version": info.get("freshness", {}).get("core", {}).get("installed"),
-            "provider": self.profile.provider,
+            "provider": self.profile.provider, "lora": lora, "vae": vae,
         }
 
     async def validate(self, workflow_path: Path):

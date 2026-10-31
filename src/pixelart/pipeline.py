@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 import importlib.metadata
 import shutil
 import sys
@@ -78,15 +79,22 @@ def import_image(source: Path, output: Path, request: Request):
     return process(project)
 
 
-async def generate(output: Path, request: Request, profile: Profile, submit_only=False, wait_seconds=180):
+@asynccontextmanager
+async def borrowed_provider(provider):
+    yield provider
+
+
+async def generate(output: Path, request: Request, profile: Profile, submit_only=False, wait_seconds=180, provider=None):
     project = Project.create(output, request.to_dict())
     project.manifest["provider"] = {
         "id": profile.id, "kind": profile.provider, "fingerprint": profile.fingerprint(),
     }
     project.save()
     try:
-        async with connect(profile) as provider:
-            preflight = await provider.preflight(request.checkpoint)
+        context = connect(profile) if provider is None else borrowed_provider(provider)
+        async with context as provider:
+            optional_assets = {key: getattr(request, key) for key in ("lora", "vae") if getattr(request, key)}
+            preflight = await provider.preflight(request.checkpoint, **optional_assets)
             request.checkpoint = preflight["checkpoint"]
             project.manifest["request"] = request.to_dict()
             write_json(project.root / "request.json", request.to_dict())
