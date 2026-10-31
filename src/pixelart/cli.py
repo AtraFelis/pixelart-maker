@@ -17,6 +17,8 @@ def parser():
     doctor = sub.add_parser("doctor", help="Check a generation target without generating")
     doctor.add_argument("--profile", type=Path)
     doctor.add_argument("--checkpoint", default="")
+    doctor.add_argument("--lora", default="")
+    doctor.add_argument("--vae", default="")
     for name in ("generate", "convert"):
         command = sub.add_parser(name)
         command.add_argument("--output", type=Path, required=True, help="New project directory; never overwritten")
@@ -32,6 +34,9 @@ def parser():
         if name == "generate":
             command.add_argument("--profile", type=Path)
             command.add_argument("--checkpoint", default="")
+            command.add_argument("--lora", default="")
+            command.add_argument("--lora-strength", type=float, default=1.0)
+            command.add_argument("--vae", default="")
             command.add_argument("--generation-size", type=int, choices=(512, 768, 1024), default=1024)
             command.add_argument("--steps", type=int, default=28)
             command.add_argument("--cfg", type=float, default=7.0)
@@ -48,9 +53,10 @@ def parser():
     return result
 
 
-async def doctor(profile, checkpoint):
+async def doctor(profile, checkpoint, lora="", vae=""):
     async with connect(profile) as provider:
-        return await provider.preflight(checkpoint)
+        assets = {key: value for key, value in (("lora", lora), ("vae", vae)) if value}
+        return await provider.preflight(checkpoint, **assets)
 
 
 def summary(project):
@@ -63,7 +69,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         if args.command == "doctor":
-            result = asyncio.run(doctor(Profile.load(args.profile), args.checkpoint))
+            result = asyncio.run(doctor(Profile.load(args.profile), args.checkpoint, args.lora, args.vae))
         elif args.command == "inspect":
             result = summary(Project.open(args.project))
         elif args.command == "resume":
@@ -80,7 +86,7 @@ def main(argv=None):
                 values["palette"] = [c.strip() for c in args.palette.split(",")]
             if args.command == "generate":
                 values.update({name: getattr(args, name) for name in (
-                    "checkpoint", "generation_size", "steps", "cfg",
+                    "checkpoint", "generation_size", "steps", "cfg", "lora", "lora_strength", "vae",
                 )})
                 if not 0 <= args.wait_seconds <= 3600:
                     raise ValueError("wait-seconds must be 0..3600")

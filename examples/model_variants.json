@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "generation_size": 1024,
+    "steps": 28,
+    "cfg": 7,
+    "colors": 16,
+    "background": "corner",
+    "tolerance": 36,
+    "padding": 2,
+    "method": "majority"
+  },
+  "variants": [
+    {
+      "name": "illustrious",
+      "checkpoint": "Illustrious-XL-v2.0.safetensors"
+    },
+    {
+      "name": "sdxl-base",
+      "checkpoint": "sd_xl_base_1.0.safetensors",
+      "vae": "sdxl_vae_fp16_fix.safetensors"
+    },
+    {
+      "name": "sdxl-pixel",
+      "checkpoint": "sd_xl_base_1.0.safetensors",
+      "vae": "sdxl_vae_fp16_fix.safetensors",
+      "lora": "pixel-art-xl.safetensors",
+      "lora_strength": 1
+    }
+  ]
+}

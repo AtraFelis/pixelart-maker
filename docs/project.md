@@ -1,12 +1,13 @@
 # 프로젝트 기본 결정
 
-상태: 첫 Python CLI 시제품 구현·로컬 검증 완료, 그림 품질 개선·편집 UI는 후속 범위
+상태: 첫 Python CLI 시제품 구현·로컬 검증 완료, 선택적 LoRA·VAE와 모델 비교 완료, 배경·세부 품질 개선·편집 UI는 후속 범위
 갱신일: 2026년 10월 31일
 
 ## 현재 작업과 기록
 
 - 초기 구성: [000-project-bootstrap](changes/000-project-bootstrap/intent.md)
-- 현재 구현: [001-generation-spike](changes/001-generation-spike/intent.md)
+- 첫 구현: [001-generation-spike](changes/001-generation-spike/intent.md)
+- 현재 작업: [004-pixel-model-comparison](changes/004-pixel-model-comparison/intent.md), 선택적 LoRA·VAE와 세 구성의 실제 비교.
 - 실행 구조: [002-portable-execution](changes/002-portable-execution/intent.md), 다른 PC 이동과 원격·클라우드 생성 설계.
 - 현재 문서 정리: [003-remove-transcript-references](changes/003-remove-transcript-references/intent.md), 사용자가 삭제한 참고 파일의 링크·검증 의존성 제거.
 - 001은 사용자가 2026년 10월 31일 진행을 수락했다. 구체적 실행·검증 상태는 해당 evidence에서 관리한다.
