@@ -7,7 +7,7 @@
 
 - AC-01: 모든 대상 브랜치의 PR과 main push에서 실행한다. PR별 오래된 실행은 취소하고 각 실행의 OS·Python 결과는 따로 확인한다.
 - AC-02: ubuntu-latest·windows-latest와 Python 3.11·3.12·3.13의 여섯 조합을 검사한다. 프로젝트가 선언한 지원 범위를 사용하며 .python-version의 기본 3.12는 변경하지 않는다.
-- AC-03: 현재 검증한 uv 0.9.3을 고정하고 uv sync --locked --no-editable로 설치한다. uv.lock과 pyproject.toml의 불일치는 실패해야 한다. run 단계는 --no-sync로 재해석·재설치하지 않는다.
+- AC-03: 현재 검증한 uv 0.9.3을 고정하고 uv sync --locked --no-editable --reinstall-package pixelart-maker로 설치한다. uv.lock과 pyproject.toml의 불일치는 실패해야 한다. run 단계는 --no-sync로 재해석·재설치하지 않는다.
 - AC-04: 전체 unittest, compileall src tests examples scripts, uv build --wheel과 CLI 스모크 검사를 각각 실행한다. 실패를 무시하거나 테스트를 생략하지 않는다.
 - AC-05: CLI 스모크는 실제 설치된 pixelart 진입점의 --help·convert·inspect를 실행한다. 합성 PNG와 한글·공백 경로를 임시 디렉터리에서 사용하며 완성 프로젝트·최종 파일을 확인한다.
 - AC-06: ComfyUI 연결·모델 다운로드·실제 GPU 생성·인증 없이 완료한다. 코드는 읽기 전용 GitHub 토큰으로 체크아웃하며 토큰을 Git 설정에 보존하지 않는다.

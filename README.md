@@ -109,7 +109,7 @@ uv run --locked python examples/run_samples.py
 [CI 워크플로](.github/workflows/ci.yml)는 모든 PR과 main push에서 Windows·Linux × Python 3.11·3.12·3.13을 검사합니다. uv 0.9.3과 런타임 의존성 잠금 파일을 사용합니다. 아래 명령으로 동일한 검사를 로컬에서도 실행할 수 있습니다.
 
 ~~~powershell
-uv sync --locked --no-editable
+uv sync --locked --no-editable --reinstall-package pixelart-maker
 uv run --no-sync python -m unittest discover -s tests -v
 uv run --no-sync python -m compileall -q src tests examples scripts
 uv build --wheel

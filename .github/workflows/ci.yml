@@ -45,7 +45,7 @@ jobs:
         run: uv python install "${{ matrix.python-version }}"
 
       - name: Install locked dependencies and packaged project
-        run: uv sync --locked --no-editable
+        run: uv sync --locked --no-editable --reinstall-package pixelart-maker
 
       - name: Run all tests
         run: uv run --no-sync python -m unittest discover -s tests -v

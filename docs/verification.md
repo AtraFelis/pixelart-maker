@@ -84,7 +84,7 @@ UI·참고 이미지 업로드·부분 재생성·취소·DB는 이 시제품 �
 
 각 조합에서 다음을 실행한다.
 
-1. uv python install <matrix-version> 및 uv sync --locked --no-editable. uv.lock을 변경하지 않고 설치하며 프로젝트는 패키지로 설치한다.
+1. uv python install <matrix-version> 및 uv sync --locked --no-editable --reinstall-package pixelart-maker. uv.lock을 변경하지 않고 설치하며 프로젝트는 패키지로 설치한다.
 2. uv run --no-sync python -m unittest discover -s tests -v.
 3. uv run --no-sync python -m compileall -q src tests examples scripts.
 4. uv build --wheel. 기존 격리 빌드 백엔드 범위를 사용하며 백엔드까지 완전 잠금된 빌드라고 주장하지 않는다.

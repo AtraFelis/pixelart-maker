@@ -22,3 +22,7 @@
 - https://docs.astral.sh/uv/guides/integration/github/
 - https://github.com/actions/checkout/releases/tag/v7.0.1
 - https://github.com/astral-sh/setup-uv/releases/tag/v10.3.3
+
+## 후속 검증에서 확인한 기존 비편집 설치본 갱신
+
+PR #2의 리뷰 수정과 회귀 검사 8개를 PR #3에 반영했다. 기존 tmp/ci-validation에 단순 sync를 실행하자 수정 전 설치본이 재사용되어 새 회귀 검사 8개가 실패 16건·오류 1건으로 다시 재현됐다. 워크플로와 로컬 재현 명령의 sync에 --reinstall-package pixelart-maker를 추가해 앱 패키지를 매번 최신 소스로 재설치한다. 런타임 의존성·잠금 파일은 유지한다. 수정 후 비편집 설치본에서 전체 52개 검사와 CLI 스모크를 다시 확인하고 최신 head의 실제 CI도 확인한다. 새 CI 버그 확인을 위해 기존 테스트를 약화하지 않았다.
