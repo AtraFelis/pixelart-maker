@@ -97,6 +97,8 @@ def convert(image: Image.Image, request: Request):
     palette = palette_for(prepared, request)
     bounds = prepared.getchannel("A").getbbox()
     if bounds is None:
+        if request.method == "grid":
+            raise ValueError("no periodic grid detected in empty foreground; choose nearest or majority")
         notes.append("Empty foreground: technical validity does not imply usable artwork.")
         blank = Image.new("RGBA", (request.size, request.size))
         return {"nearest": blank.copy(), "majority": blank.copy()}, palette, notes

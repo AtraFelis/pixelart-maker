@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass, field
 import math
+import re
 
 
 @dataclass
@@ -38,12 +39,8 @@ class Request:
         if self.method not in ("nearest", "majority", "grid"):
             raise ValueError("method must be nearest, majority or grid")
         for color in self.palette:
-            if len(color) != 7 or not color.startswith("#"):
+            if not isinstance(color, str) or re.fullmatch(r"#[0-9a-fA-F]{6}", color) is None:
                 raise ValueError("palette entries must be #RRGGBB")
-            try:
-                int(color[1:], 16)
-            except ValueError as exc:
-                raise ValueError("palette entries must be #RRGGBB") from exc
         if self.palette and len(self.palette) > self.colors:
             raise ValueError("fixed palette exceeds colors")
 

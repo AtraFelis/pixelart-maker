@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlsplit
 import hashlib
+import ipaddress
 import json
 import os
 import platform
@@ -27,6 +28,12 @@ class Profile:
                 raise ValueError("remote profile requires an http(s) URL")
             if url.username or url.password or url.query or url.fragment:
                 raise ValueError("put authentication in token_env, not in the URL")
+            try:
+                loopback = ipaddress.ip_address(url.hostname).is_loopback
+            except ValueError:
+                loopback = url.hostname.lower() == "localhost"
+            if self.token_env and url.scheme != "https" and not loopback:
+                raise ValueError("authenticated remote targets require HTTPS or a loopback tunnel")
         if not self.id.strip():
             raise ValueError("profile id must not be empty")
 

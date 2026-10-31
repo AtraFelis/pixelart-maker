@@ -80,3 +80,7 @@ Python 3.11~3.13, uv와 잠금 파일, Pillow·NumPy·MCP Python SDK 1.x를 사�
 - 기본 생성 조건을 첫 실패 샘플과 개선 샘플을 비교해 1024×1024, 28 steps, CFG 7로 조정.
 - 원본과 다른 처리 방법은 같은 소스에서 재사용. 프로젝트 경로·마스크·픽셀·재개·접수 불명 상태를 자동 검사.
 - 외부 격자 라이브러리·전용 모델 설치는 하지 않았으며 현재 비교의 한계로 명시.
+
+## CodeRabbit 후속 수정 범위
+
+사용자의 리뷰 반영 요청에 따라 request.py·pixels.py·config.py·providers/base.py·providers/comfy_http.py·examples/run_samples.py의 지적을 재현 테스트로 확인하고 수정한다. tests/test_review_regressions.py를 추가하며 README의 프로필 명령·문서 링크·HTTPS 안내를 보완한다. Pillow 12.0에서도 같은 RGBA 기대값을 검사하도록 기존 테스트의 데이터 읽기 API만 NumPy로 대체한다. 의존성 범위는 바꾸지 않는다. 과거 000 evidence의 실제 실행 수치는 보존하고 그 범위를 주석으로 명확히 한다. 전체 테스트·문법·wheel·문서 링크·공백 검사를 실행하고 review.md에 개별 판단을 기록한다.

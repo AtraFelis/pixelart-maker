@@ -68,7 +68,7 @@ class PixelTests(unittest.TestCase):
         image = Image.new("RGBA", (3, 1))
         image.putdata([(123, 88, 9, 0), (10, 20, 30, 127), (10, 20, 30, 128)])
         prepared, _ = prepare(image, Request(background="alpha"))
-        self.assertEqual(list(prepared.get_flattened_data()), [(0, 0, 0, 0), (0, 0, 0, 0), (10, 20, 30, 255)])
+        self.assertEqual(np.array(prepared).reshape(-1, 4).tolist(), [[0, 0, 0, 0], [0, 0, 0, 0], [10, 20, 30, 255]])
 
     def test_opaque_background_also_obeys_fixed_palette(self):
         image = Image.new("RGBA", (12, 12), (0, 0, 0, 0))

@@ -9,6 +9,10 @@ class ProviderError(RuntimeError):
     pass
 
 
+class SubmissionRejected(ProviderError):
+    """The request was not accepted, or failed locally before transmission."""
+
+
 class SubmissionUnknown(ProviderError):
     """A request might have been accepted; never resubmit automatically."""
 

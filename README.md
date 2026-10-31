@@ -21,6 +21,14 @@ uv run --locked pixelart doctor
 
 PC별 실행 파일 위치가 PATH에 없으면 profiles/local.example.json을 profiles/my.local.json으로 복사해 command를 실제 경로로 바꿉니다. 이 로컬 설정 파일은 Git에서 제외됩니다. 앱 소스에 설치 경로를 고정할 필요가 없습니다.
 
+프로필을 복사한 경우 아래처럼 doctor·generate·resume에 같은 파일을 지정합니다.
+
+~~~powershell
+uv run --locked pixelart doctor --profile profiles/my.local.json
+uv run --locked pixelart generate --profile profiles/my.local.json --prompt "red potion bottle icon" --output output/local-potion
+uv run --locked pixelart resume output/local-potion --profile profiles/my.local.json
+~~~
+
 ## 물약 만들기
 
 ~~~powershell
@@ -76,7 +84,7 @@ uv run --locked pixelart doctor --profile profiles/gpu.local.json
 uv run --locked pixelart generate --profile profiles/gpu.local.json --prompt "golden key icon" --output output/key
 ~~~
 
-인증이 필요하면 token_env에 환경변수 이름을 지정합니다. 값은 설정 파일에 넣지 않습니다. 이 어댑터는 자체 운영 ComfyUI용이며, 관리형 Comfy Cloud MCP는 별도 인증·도구 어댑터가 필요합니다.
+인증이 필요하면 token_env에 환경변수 이름을 지정합니다. 값은 설정 파일에 넣지 않습니다. 인증 토큰을 사용하는 원격 주소는 HTTPS가 필요합니다. HTTP는 localhost·127.0.0.0/8·::1의 로컬 연결이나 SSH 터널에만 허용합니다. API 리다이렉트는 따라가지 않으므로 최종 서버 주소를 설정합니다. 이 어댑터는 자체 운영 ComfyUI용이며, 관리형 Comfy Cloud MCP는 별도 인증·도구 어댑터가 필요합니다.
 
 현재 시제품의 생성 입력은 텍스트입니다. 참고 이미지 업로드·인페인트·취소와 전체 편집 UI는 후속 범위입니다.
 
@@ -102,6 +110,8 @@ uv run --locked python examples/run_samples.py
 
 - [개발 계획](픽셀아트_프로그램_개발계획.md)
 - [프로젝트 정의](docs/project.md)
+- [개발 절차](docs/workflow.md)
+- [삭제한 참고 대화 기록의 정리](docs/changes/003-remove-transcript-references/intent.md)
 - [첫 시제품 계획](docs/changes/001-generation-spike/plan.md)
 - [실행·검증 기록](docs/changes/001-generation-spike/evidence.md)
 - [검증 계약](docs/verification.md)

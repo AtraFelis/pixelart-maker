@@ -4,11 +4,17 @@ import os
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
-from urllib.request import Request as HTTPRequest, urlopen
+from urllib.request import Request as HTTPRequest, HTTPRedirectHandler, build_opener
 
 from pixelart.config import Profile
-from pixelart.providers.base import ProviderError, SubmissionUnknown, job_state
+from pixelart.providers.base import ProviderError, SubmissionRejected, SubmissionUnknown, job_state
 from pixelart.providers.local_mcp import CORE_NODES
+
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        # Fixed API targets must never forward credentials or rewrite POST into GET.
+        return None
 
 
 class ComfyHTTP:
@@ -24,7 +30,8 @@ class ComfyHTTP:
             if self.profile.token_env:
                 token = os.environ.get(self.profile.token_env)
                 if not token:
-                    raise ProviderError("missing token environment variable: " + self.profile.token_env)
+                    error = SubmissionRejected if route == "/prompt" and payload is not None else ProviderError
+                    raise error("missing token environment variable: " + self.profile.token_env)
                 headers["Authorization"] = "Bearer " + token
             body = None
             if payload is not None:
@@ -32,10 +39,13 @@ class ComfyHTTP:
                 body = json.dumps(payload).encode()
             request = HTTPRequest(self.base + route, data=body, headers=headers)
             try:
-                with urlopen(request, timeout=30) as response:
+                with build_opener(NoRedirect()).open(request, timeout=30) as response:
                     value = response.read()
             except HTTPError as exc:
-                raise ProviderError(f"ComfyUI HTTP {exc.code}: check target, authentication and workflow") from exc
+                code = exc.code
+                exc.close()
+                error = SubmissionRejected if route == "/prompt" and payload is not None and 400 <= code < 500 else ProviderError
+                raise error(f"ComfyUI HTTP {code}: check target, authentication and workflow") from exc
             except URLError as exc:
                 raise ProviderError("ComfyUI network failure; verify target connectivity") from exc
             return value if binary else json.loads(value)
@@ -64,11 +74,13 @@ class ComfyHTTP:
         graph = json.loads(workflow_path.read_text(encoding="utf-8"))
         try:
             response = await self.request("/prompt", {"prompt": graph})
+        except SubmissionRejected:
+            raise
         except Exception as exc:
             raise SubmissionUnknown("remote submission unconfirmed; check history before resubmitting") from exc
         if not response.get("prompt_id"):
             if response.get("error") or response.get("node_errors"):
-                raise ProviderError("remote target rejected the workflow")
+                raise SubmissionRejected("remote target rejected the workflow")
             raise SubmissionUnknown("remote submission response has no prompt_id")
         return response["prompt_id"]
 
