@@ -1,0 +1,6 @@
+{
+  "id": "my-gpu-server",
+  "provider": "comfy-http",
+  "url": "http://127.0.0.1:8188",
+  "token_env": ""
+}
