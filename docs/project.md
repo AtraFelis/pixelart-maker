@@ -8,7 +8,8 @@
 - 초기 구성: [000-project-bootstrap](changes/000-project-bootstrap/intent.md)
 - 첫 구현: [001-generation-spike](changes/001-generation-spike/intent.md)
 - 모델 비교: [004-pixel-model-comparison](changes/004-pixel-model-comparison/intent.md), 선택적 LoRA·VAE와 세 구성의 실제 비교.
-- 현재 작업: [005-github-actions-ci](changes/005-github-actions-ci/intent.md), Windows·Linux의 잠금 설치·테스트·빌드·CLI 자동 검사.
+- CI: [005-github-actions-ci](changes/005-github-actions-ci/intent.md), Windows·Linux의 잠금 설치·테스트·빌드·CLI 자동 검사.
+- 문서로 기록한 후속 작업: [006-prompt-profiles](changes/006-prompt-profiles/intent.md), 공통 기본값의 아이템 편향과 인물 요청 충돌. 앱 수정은 아직 미착수.
 - 실행 구조: [002-portable-execution](changes/002-portable-execution/intent.md), 다른 PC 이동과 원격·클라우드 생성 설계.
 - 현재 문서 정리: [003-remove-transcript-references](changes/003-remove-transcript-references/intent.md), 사용자가 삭제한 참고 파일의 링크·검증 의존성 제거.
 - 001은 사용자가 2026년 10월 31일 진행을 수락했다. 구체적 실행·검증 상태는 해당 evidence에서 관리한다.
@@ -82,3 +83,7 @@
 - [x] 첫 CLI 구현 범위와 기술 선택 기록
 - [x] 첫 구현 계획 수락 기록
 - [x] CLI 설치·실행·테스트 명령 구현·실행 후 등록
+
+## 알려진 생성 기본값 문제와 우선 후속 작업
+
+현재 워크플로는 초기 아이템 비교용 인물 억제 네거티브와 단일 오브젝트 조건을 공통 적용한다. 이 때문에 여성 기사 같은 단일 인물 요청을 방해할 수 있다. 이 문제의 후속 기준은 [006 spec](changes/006-prompt-profiles/spec.md)에 있다. 다음 생성 기능 작업에서 공통 기본값·아이템/캐릭터 프리셋·사용자 프롬프트 편집을 우선 검토한다. 장기적인 동일 캐릭터 일관성과 별개이며 현재는 문서 기록만 완료한 상태다.
