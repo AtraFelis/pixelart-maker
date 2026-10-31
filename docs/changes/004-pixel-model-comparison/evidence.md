@@ -2,7 +2,7 @@
 
 - 변경 ID: 004-pixel-model-comparison.
 - 날짜: 2026년 10월 31일.
-- 상태: 구현·기술 검사·18개 실제 생성·작성자 시각 평가·CodeRabbit 검토 완료. PR 제출 준비.
+- 상태: 구현·기술 검사·18개 실제 생성·작성자 시각 평가·로컬 CodeRabbit 검토 완료. PR #2 제출, PR #1 스레드 후속 조치 완료. GitHub 자동 재리뷰는 별도 대기.
 - 기준: PR #1의 시제품과 CodeRabbit 후속 수정 a8c24d7 위의 변경.
 
 ## 수락과 실행 환경
@@ -27,7 +27,7 @@ Windows 11, 앱 Python 3.12.14, Pillow 12.3.0, NumPy 2.5.4, MCP SDK 1.30.0. 로�
 
 - 실행: .venv/Scripts/python.exe -m unittest discover -s tests -v. 모델 작업 단독 단계 37개 통과. PR #1의 리뷰 회귀 검사 7개를 반영한 최종 전체 44개 통과, 종료 코드 0.
 - 최초 경로 입력 검사에서 역슬래시 루트·상위 경로 두 사례가 실패했다. Request의 구분자 정규화를 고친 뒤 동일 테스트를 유지해 통과했다.
-- 기존 CodeRabbit 10건의 판단과 실패 재현·수정은 [001 review.md](../001-generation-spike/review.md)에 기록했다. 9건 수용, 과거 파일 수 기록을 바꾸자는 제안 1건은 범위를 설명하고 수치를 보존했다.
+- 기존 CodeRabbit 10건의 판단과 실패 재현·수정은 [001 review.md](../001-generation-spike/review.md)에 기록했다. 코드·안내 9건을 수정했고 과거 파일 수 1건은 입력 집합의 범위 설명을 보완하고 수치를 보존했다. 후속 확인에서 범위 설명 요청을 단순 수치 변경 제안으로 해석했던 기록도 정정했다.
 - 실행: .venv/Scripts/python.exe -m compileall -q src tests examples. 종료 코드 0.
 - 실행: uv build --wheel. dist/pixelart_maker-0.1.0-py3-none-any.whl 생성, 종료 코드 0.
 - 실행: .venv/Scripts/pixelart.exe generate --help. --lora·--lora-strength·--vae 옵션 확인, 종료 코드 0.
@@ -56,3 +56,9 @@ LoRA는 단일 별 동전과 닫힌 상자에서 뚜렷한 개선이 있었다. 
 ## 미검증과 다음 범위
 
 실제 원격 GPU·관리형 Comfy Cloud·외부 인증 프록시·두 번째 PC는 미검증이다. 원격 선택적 모델 검사는 모의 HTTP 응답으로 확인했다. 사용자 시각 수락, 여러 시드·프롬프트의 통계적 품질, 인페인트·UI·수동 편집은 별도다. 이번 결과를 보편적인 모델 우열로 해석하지 않는다.
+
+## GitHub 스레드 후속 확인
+
+사용자가 스레드 답글 여부를 확인하고 “이어서 진행해줘”라고 요청하여, PR #1의 10개 인라인 리뷰에 수정 커밋·동작·재현 검사와 한계를 답글로 남기고 해결 처리했다. 코드 수정은 a8c24d7, 초기 검증 범위 설명 보완은 95f929e다. 해결 처리는 작성자의 조치 완료 표시이며 CodeRabbit이나 사용자의 승인으로 취급하지 않는다.
+
+PR #2는 GitHub 자동 리뷰의 무료 한도 안내만 있었으며 신규 인라인 지적은 없었다. 앞선 CLI의 실제 completed 리뷰와 GitHub 자동 리뷰는 구별한다. 자동 리뷰가 완료됐다고 주장하지 않는다. 검토 상태와 32개/44개 테스트 결과를 각 PR 설명에도 반영한다. 이번 후속 변경은 문서와 리뷰 상태 정리이며 추가 GPU 생성·프로그램 동작 변경은 없다.
