@@ -36,3 +36,7 @@ LoRA 강도 경계·비정상 값, 그래프의 세 연결, 기본 그래프 호
 사용자의 후속 요청에 따라 PR 제출 전에 CodeRabbit CLI로 새 변경분을 리뷰하고 합당한 지적을 수정한다. 기존 PR #1의 CodeRabbit 지적은 먼저 해당 PR에 수정 반영했고 그 결과를 이 브랜치에도 반영했다. 검토 범위·판단은 evidence에 기록한다.
 
 src/pixelart/comparison.py로 재개·정의 일치·보고서 수집을 분리하고 pipeline.generate에 호출자 소유 공급자 재사용을 추가했다. docs/project.md·README·verification과 평가 기록·소형 수치 results.json을 함께 갱신한다. 원본 이미지·가중치는 계속 Git에서 제외한다.
+
+## GitHub 후속 리뷰 수정 계획
+
+PR #2의 4431659833·4431659836을 수용할지 재현 후 판단한다. tests/test_comparison_review.py에 변형·샘플·공통 조건 경계, 정상 정의, 확인된 작업 수집, 저장 원본의 오프라인 재개, 기존/새 프로젝트 혼합과 점검 재사용 검사를 먼저 작성해 예상 실패를 확인한다. comparison.py의 필드 허용 목록과 새 제출 시점의 지연 점검만 수정한다. 전체 unittest·compileall·wheel·문서·공백 검사를 실행하고 이 문서군에 증거를 남긴다. 기존 결과·가중치·uv.lock은 보존한다. 수정은 PR #2에 push하고 후속 PR #3에도 반영해 실제 CI를 확인한다. 각 리뷰 스레드에 판단·수정 커밋·검사 결과를 답변한 뒤 해결한다. push 후 재리뷰는 시간 한도를 지키는 기존 예약에서 처리한다.
