@@ -16,7 +16,7 @@ def build_workflow(request: Request, project_id: str):
         "few flat solid colors, minimal details, generous empty margin, "
         "(plain solid white background:1.5), no shadow, no text, no frame"
     )
-    return {
+    graph = {
         "1": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": request.checkpoint}},
         "2": {"class_type": "CLIPTextEncode", "inputs": {"text": prompt, "clip": ["1", 1]}},
         "3": {"class_type": "CLIPTextEncode", "inputs": {"text": NEGATIVE, "clip": ["1", 1]}},
@@ -33,3 +33,15 @@ def build_workflow(request: Request, project_id: str):
             "filename_prefix": "pixelart/" + project_id, "images": ["6", 0],
         }},
     }
+    if request.lora:
+        graph["8"] = {"class_type": "LoraLoader", "inputs": {
+            "model": ["1", 0], "clip": ["1", 1], "lora_name": request.lora,
+            "strength_model": request.lora_strength, "strength_clip": request.lora_strength,
+        }}
+        graph["5"]["inputs"]["model"] = ["8", 0]
+        graph["2"]["inputs"]["clip"] = ["8", 1]
+        graph["3"]["inputs"]["clip"] = ["8", 1]
+    if request.vae:
+        graph["9"] = {"class_type": "VAELoader", "inputs": {"vae_name": request.vae}}
+        graph["6"]["inputs"]["vae"] = ["9", 0]
+    return graph

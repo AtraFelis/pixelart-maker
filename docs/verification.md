@@ -69,3 +69,27 @@ git status --short --branch
 원격 HTTP 검사는 로컬 모의 서버로 수행하며 실제 원격 GPU·관리형 Comfy Cloud 인증·실제 두 번째 PC 검증을 대체하지 않는다. 프로젝트 경로 이동은 임시 디렉터리와 한글 경로로 자동 검사한다.
 
 UI·참고 이미지 업로드·부분 재생성·취소·DB는 이 시제품 범위가 아니며 아직 검사하지 않는다. 관리형 클라우드 통합과 OS별 설치 검증은 해당 구현 변경에서 추가한다. 별도 린트·타입 검사 도구는 아직 도입하지 않았다.
+
+## 선택적 LoRA·VAE와 모델 비교
+
+004 변경의 단위 검사는 기존 unittest 명령에 포함된다. 기본 그래프 호환·모델/CLIP/VAE 연결·강도 경계·경로 입력·누락 파일/노드·로컬/HTTP 대상 조회·비교 재개·불일치 거절을 검사한다.
+
+실제 비교: uv run --locked python examples/compare_models.py. 대상 서버에 세 체크포인트/LoRA/VAE 구성이 준비되어 있어야 하며 18개 GPU 작업을 순차 실행한다. 재실행 시 동일 정의의 완료 결과를 서버 없이 재사용하고 진행 중 작업은 확인된 ID로 재개한다. 비교 조건을 변경할 때는 새 --output 폴더를 사용한다. 결과의 격자 감지와 기술 검사는 시각 품질 평가를 대체하지 않는다.
+
+사용자 요청에 따라 후속 PR 전 CodeRabbit 리뷰를 실제 확인하고 합당한 지적을 수정한다. 리뷰를 실행할 수 없으면 완료로 기록하지 않으며 차단 사유와 필요한 후속 조치를 알린다.
+
+## GitHub Actions CI
+
+005 변경의 .github/workflows/ci.yml은 모든 PR과 main push에서 ubuntu-latest·windows-latest × Python 3.11·3.12·3.13을 실행한다. uv 0.9.3과 Action의 검증한 전체 SHA를 고정한다. 읽기 전용 토큰, persist-credentials=false, 15분 제한, PR별 오래된 실행 취소, fail-fast=false를 사용한다.
+
+각 조합에서 다음을 실행한다.
+
+1. uv python install <matrix-version> 및 uv sync --locked --no-editable --reinstall-package pixelart-maker. uv.lock을 변경하지 않고 설치하며 프로젝트는 패키지로 설치한다.
+2. uv run --no-sync python -m unittest discover -s tests -v.
+3. uv run --no-sync python -m compileall -q src tests examples scripts.
+4. uv build --wheel. 기존 격리 빌드 백엔드 범위를 사용하며 백엔드까지 완전 잠금된 빌드라고 주장하지 않는다.
+5. uv run --no-sync python scripts/smoke_cli.py. 선택된 환경의 설치된 CLI로 --help·합성 PNG convert·inspect를 실제 실행하고 한글·공백 경로를 확인한다.
+
+잠금 불일치·실패 테스트·빌드/CLI 오류는 0이 아닌 코드로 실패해야 한다. CI는 ComfyUI·GPU·모델·생성 API 인증을 요구하지 않는다. 실제 GPU 생성·시각 평가는 별도 통합 검사다. Linux CPU 검사 통과가 Linux에서 실제 ComfyUI 생성까지 검증했다는 뜻은 아니다.
+
+워크플로 변경은 actionlint로 문법·표현식을 확인하고 등록된 문서·공백 검사도 수행한다. 로컬 재현과 실제 GitHub-hosted 결과를 구별해 005 evidence에 실행 URL과 함께 기록한다. 브랜치 보호·필수 상태 검사 지정은 이번 변경에 포함하지 않는다.

@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-31",
+  "conditions": "examples/model_variants.json + examples/samples.json",
+  "method": "majority",
+  "quality": "author_visual_review; user acceptance pending",
+  "records": [
+    {
+      "variant": "illustrious",
+      "sample": "potion",
+      "source_color_count": 9605,
+      "technical_pass": true,
+      "final_colors": 15,
+      "grid_detected": false,
+      "client_elapsed_seconds": 17.047
+    },
+    {
+      "variant": "illustrious",
+      "sample": "apple",
+      "source_color_count": 7753,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 15.812
+    },
+    {
+      "variant": "illustrious",
+      "sample": "coin",
+      "source_color_count": 31089,
+      "technical_pass": true,
+      "final_colors": 14,
+      "grid_detected": false,
+      "client_elapsed_seconds": 16.11
+    },
+    {
+      "variant": "illustrious",
+      "sample": "sword",
+      "source_color_count": 16402,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 16.218
+    },
+    {
+      "variant": "illustrious",
+      "sample": "chest",
+      "source_color_count": 5341,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 16.093
+    },
+    {
+      "variant": "illustrious",
+      "sample": "key",
+      "source_color_count": 13375,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 15.969
+    },
+    {
+      "variant": "sdxl-base",
+      "sample": "potion",
+      "source_color_count": 25611,
+      "technical_pass": true,
+      "final_colors": 14,
+      "grid_detected": false,
+      "client_elapsed_seconds": 20.25
+    },
+    {
+      "variant": "sdxl-base",
+      "sample": "apple",
+      "source_color_count": 44385,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 15.859
+    },
+    {
+      "variant": "sdxl-base",
+      "sample": "coin",
+      "source_color_count": 78996,
+      "technical_pass": true,
+      "final_colors": 14,
+      "grid_detected": false,
+      "client_elapsed_seconds": 16.125
+    },
+    {
+      "variant": "sdxl-base",
+      "sample": "sword",
+      "source_color_count": 15048,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 15.953
+    },
+    {
+      "variant": "sdxl-base",
+      "sample": "chest",
+      "source_color_count": 131472,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 16.219
+    },
+    {
+      "variant": "sdxl-base",
+      "sample": "key",
+      "source_color_count": 44749,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": false,
+      "client_elapsed_seconds": 17.0
+    },
+    {
+      "variant": "sdxl-pixel",
+      "sample": "potion",
+      "source_color_count": 45538,
+      "technical_pass": true,
+      "final_colors": 15,
+      "grid_detected": true,
+      "client_elapsed_seconds": 17.515
+    },
+    {
+      "variant": "sdxl-pixel",
+      "sample": "apple",
+      "source_color_count": 44372,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": true,
+      "client_elapsed_seconds": 18.719
+    },
+    {
+      "variant": "sdxl-pixel",
+      "sample": "coin",
+      "source_color_count": 43282,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": true,
+      "client_elapsed_seconds": 16.204
+    },
+    {
+      "variant": "sdxl-pixel",
+      "sample": "sword",
+      "source_color_count": 17741,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": true,
+      "client_elapsed_seconds": 15.984
+    },
+    {
+      "variant": "sdxl-pixel",
+      "sample": "chest",
+      "source_color_count": 83686,
+      "technical_pass": true,
+      "final_colors": 16,
+      "grid_detected": true,
+      "client_elapsed_seconds": 15.938
+    },
+    {
+      "variant": "sdxl-pixel",
+      "sample": "key",
+      "source_color_count": 41575,
+      "technical_pass": true,
+      "final_colors": 14,
+      "grid_detected": true,
+      "client_elapsed_seconds": 15.937
+    }
+  ]
+}
