@@ -104,6 +104,22 @@ uv run --locked python examples/run_samples.py
 
 평가 대상과 시드는 examples/samples.json에 있습니다. 생성물은 output/evaluation 아래에 저장되며 Git에서 제외됩니다.
 
+## PR 자동 검사
+
+[CI 워크플로](.github/workflows/ci.yml)는 모든 PR과 main push에서 Windows·Linux × Python 3.11·3.12·3.13을 검사합니다. uv 0.9.3과 런타임 의존성 잠금 파일을 사용합니다. 아래 명령으로 동일한 검사를 로컬에서도 실행할 수 있습니다.
+
+~~~powershell
+uv sync --locked --no-editable --reinstall-package pixelart-maker
+uv run --no-sync python -m unittest discover -s tests -v
+uv run --no-sync python -m compileall -q src tests examples scripts
+uv build --wheel
+uv run --no-sync python scripts/smoke_cli.py
+~~~
+
+스모크 검사는 설치된 CLI로 합성 PNG 변환과 프로젝트 재열기를 확인합니다. ComfyUI·GPU·모델·생성용 비밀정보가 필요 없습니다. 실제 생성·그림 품질 평가는 별도입니다. --no-editable은 저장소 소스 대신 설치된 패키지의 CLI를 검사하기 위한 옵션입니다. 소스 수정이 바로 반영되는 개발 설치로 돌아가려면 uv sync --locked를 실행합니다.
+
+CI의 실제 실행 증거와 CodeRabbit 검토는 [005 검증 기록](docs/changes/005-github-actions-ci/evidence.md)에 남깁니다. 브랜치 보호의 필수 검사 설정은 별도이며 이 워크플로 추가만으로 병합을 강제로 차단하지는 않습니다.
+
 ## 픽셀 전용 LoRA 비교
 
 Pixel Art XL은 SDXL용 LoRA입니다. 아래 파일을 대상 ComfyUI의 checkpoints·loras·vae에 각각 준비합니다. 출처·고정 revision·SHA-256·라이선스는 [모델 기록](presets/pixel-art-xl.json)에 있습니다. SDXL base, LoRA, VAE 합계 약 7.4GB이며 모델을 저장소에 포함하지 않습니다.
