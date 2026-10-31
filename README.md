@@ -118,6 +118,8 @@ uv run --locked python examples/compare_models.py
 
 비교는 기존 모델·SDXL base·같은 base에 Pixel Art XL을 적용한 세 구성에서 여섯 소재를 순차 생성합니다. [고정 조건](examples/model_variants.json), 기존 samples.json의 프롬프트·시드를 사용하며 output/model-comparison에 원본·32/64 최종·확대본·comparison.json을 저장합니다. 기존 결과는 요청이 일치할 때만 재사용합니다. 설정을 바꾸면 --output으로 새 폴더를 지정합니다. 접수 여부가 불명확하면 자동 재제출하지 않습니다.
 
+변형 설정에는 name·checkpoint·lora·lora_strength·vae만, 샘플에는 name·prompt·size·seed만 허용합니다. 공통 생성·후처리 조건은 settings에 둡니다. 다른 영역의 필드를 넣으면 실행 전에 거절합니다. 기존 작업 ID의 수집은 모델·노드를 다시 점검하지 않고, 원본이 저장된 프로젝트는 서버 없이 재처리합니다. 사전 점검은 새 작업 제출 때 수행합니다.
+
 실제 18개 생성의 기술 검사는 모두 통과했고 LoRA 구성에서 동전·닫힌 상자가 개선됐습니다. 그림자·라벨·방향과 작은 크기의 세부 손실은 남아 있습니다. [비교 평가](docs/changes/004-pixel-model-comparison/evaluation.md)를 참고하세요.
 
 ## 품질 범위

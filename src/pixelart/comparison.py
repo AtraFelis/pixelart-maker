@@ -1,6 +1,6 @@
 """Controlled model comparison; immutable definitions and no automatic resubmission."""
 from pathlib import Path
-import asyncio
+from contextlib import AsyncExitStack
 import json
 import re
 import time
@@ -12,6 +12,19 @@ from pixelart.pipeline import generate, resume
 from pixelart.project import Project, write_json
 from pixelart.providers.base import connect
 from pixelart.request import Request
+
+
+VARIANT_FIELDS = {"name", "checkpoint", "lora", "lora_strength", "vae"}
+SAMPLE_FIELDS = {"name", "prompt", "size", "seed"}
+SHARED_FIELDS = {"colors", "generation_size", "steps", "cfg", "background", "tolerance", "padding", "method", "palette"}
+
+
+def check_fields(values, allowed, label):
+    if not isinstance(values, dict):
+        raise ValueError(label + " must be an object")
+    unknown = set(values) - allowed
+    if unknown:
+        raise ValueError(label + " contains unsupported fields: " + ", ".join(sorted(unknown)))
 
 
 def load_definition(samples_path: Path, variants_path: Path, profile: Profile):
@@ -37,6 +50,9 @@ def load_definition(samples_path: Path, variants_path: Path, profile: Profile):
 
 
 def make_request(definition, variant, sample):
+    check_fields(definition["settings"], SHARED_FIELDS, "shared settings")
+    check_fields(variant, VARIANT_FIELDS, "variant")
+    check_fields(sample, SAMPLE_FIELDS, "sample")
     settings = {**definition["settings"], **{k: v for k, v in variant.items() if k != "name"},
                 **{k: v for k, v in sample.items() if k != "name"}}
     return Request(**settings)
@@ -102,17 +118,23 @@ async def run_comparison(output: Path, definition: dict, profile: Profile, wait_
             expected = make_request(definition, variant, sample)
             path = output / variant["name"] / sample["name"]
             projects.append((sample, expected, path, check_existing(path, expected)))
-        unfinished = any(project is None or project.manifest["state"] != "review"
-                         for _, _, _, project in projects)
-
-        async def execute(provider=None):
+        # Existing jobs and saved sources use resume without discovery or model checks.
+        # New submissions open one provider lazily and share discovery within the variant.
+        async with AsyncExitStack() as stack:
+            prepared = None
             for sample, request, path, project in projects:
                 started = time.monotonic()
                 print(json.dumps({"variant": variant["name"], "sample": sample["name"],
                                   "event": "starting"}), flush=True)
                 reused = project is not None and project.manifest["state"] == "review"
                 if project is None:
-                    project = await generate(path, request, profile, wait_seconds=wait_seconds, provider=provider)
+                    if prepared is None:
+                        active = await stack.enter_async_context(connect(profile))
+                        selected = (variant["checkpoint"], variant.get("lora", ""), variant.get("vae", ""))
+                        assets = {k: variant[k] for k in ("lora", "vae") if variant.get(k)}
+                        preflight = await active.preflight(variant["checkpoint"], **assets)
+                        prepared = PreparedProvider(active, selected, preflight)
+                    project = await generate(path, request, profile, wait_seconds=wait_seconds, provider=prepared)
                 elif not reused:
                     project = await resume(project, profile, wait_seconds)
                 if project.manifest["state"] != "review":
@@ -124,12 +146,4 @@ async def run_comparison(output: Path, definition: dict, profile: Profile, wait_
                 ledger_records[key] = record
                 write_json(ledger_path, {"definition": definition, "records": list(ledger_records.values())})
                 print(json.dumps({"variant": variant["name"], "sample": sample["name"], "state": "review"}), flush=True)
-        if unfinished:
-            async with connect(profile) as active:
-                selected = (variant["checkpoint"], variant.get("lora", ""), variant.get("vae", ""))
-                assets = {k: variant[k] for k in ("lora", "vae") if variant.get(k)}
-                preflight = await active.preflight(variant["checkpoint"], **assets)
-                await execute(PreparedProvider(active, selected, preflight))
-        else:
-            await execute()
     return records
