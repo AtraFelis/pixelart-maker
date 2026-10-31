@@ -1,0 +1,46 @@
+# Local credentials and environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local output and project data
+*.log
+tmp/
+data/
+output/
+models/
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
+Thumbs.db
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Frontend and packaging
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+playwright-report/
+test-results/
+
+# Local tool state
+.codex/
+.claude/settings.local.json
+
+# Per-machine connection profiles
+profiles/*.local.json

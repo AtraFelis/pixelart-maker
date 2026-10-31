@@ -1,0 +1,120 @@
+# AI 픽셀아트 제작 시제품
+
+Python 명령줄에서 소재를 생성하고 32×32·64×64 픽셀 PNG로 정리하는 시제품입니다. 생성 원본, 변환 후보, 16배 확대본, 설정·검사 보고서를 프로젝트 폴더에 저장합니다.
+
+로컬 ComfyUI MCP 연결을 실제 검증했습니다. 자체 운영 ComfyUI HTTP 어댑터도 구현했으며 모의 서버로 검사했습니다. 실제 다른 PC·클라우드 실행과 편집 UI는 아직 검증하지 않았습니다.
+
+## 준비와 설치
+
+- Python 3.12와 uv.
+- 로컬 생성에는 실행 중인 ComfyUI, 설치된 체크포인트, PATH에서 찾을 수 있는 comfy-mcp와 comfy-cli가 필요합니다.
+- 설치 안내: [공식 Comfy MCP](https://docs.comfy.org/agent-tools/mcp).
+- 프로그램 자체와 ComfyUI는 서로 다른 Python 환경을 사용합니다. 기존 ComfyUI 환경은 변경하지 않습니다.
+
+저장소 루트에서 실행합니다.
+
+~~~powershell
+uv sync --locked
+uv run --locked pixelart --help
+uv run --locked pixelart doctor
+~~~
+
+PC별 실행 파일 위치가 PATH에 없으면 profiles/local.example.json을 profiles/my.local.json으로 복사해 command를 실제 경로로 바꿉니다. 이 로컬 설정 파일은 Git에서 제외됩니다. 앱 소스에 설치 경로를 고정할 필요가 없습니다.
+
+프로필을 복사한 경우 아래처럼 doctor·generate·resume에 같은 파일을 지정합니다.
+
+~~~powershell
+uv run --locked pixelart doctor --profile profiles/my.local.json
+uv run --locked pixelart generate --profile profiles/my.local.json --prompt "red potion bottle icon" --output output/local-potion
+uv run --locked pixelart resume output/local-potion --profile profiles/my.local.json
+~~~
+
+## 물약 만들기
+
+~~~powershell
+uv run --locked pixelart generate --prompt "a small round bottle of red healing potion, brown cork, icon" --size 32 --colors 16 --output output/my-potion
+~~~
+
+기본값은 생성 1024×1024, 28 steps, CFG 7, seed 42입니다. --checkpoint로 대상 서버에 있는 모델을 선택할 수 있습니다. 기본 워크플로는 코어 노드만 사용하며 LoRA·커스텀 노드·유료 API를 설치하거나 호출하지 않습니다.
+
+기본 대기 시간 안에 끝나면 결과까지 저장합니다. 아직 생성 중이면 종료 코드 3과 프로젝트 경로를 출력합니다. 같은 폴더를 다시 generate하지 말고 다음으로 재개합니다.
+
+~~~powershell
+uv run --locked pixelart resume output/my-potion
+~~~
+
+--submit-only는 작업 ID를 저장하고 기다리지 않습니다. 접수 여부가 불명확한 작업은 자동 재제출하지 않습니다. 결과 수집이 끝난 프로젝트는 생성 서버 없이 다시 열고 후처리할 수 있습니다.
+
+~~~powershell
+uv run --locked pixelart inspect output/my-potion
+~~~
+
+## 결과물
+
+프로젝트 폴더에는 다음 파일이 생깁니다.
+
+- project.json: 상대 경로 자산 목록, 작업 상태·생성 ID, 설정.
+- request.json, workflow.json: 생성 요청과 실행 그래프.
+- original/: 생성 원본과 후처리 입력. 다시 생성하지 않고 재사용 가능.
+- candidates/: nearest·majority, 주기적 격자가 검출되면 실험적 grid 후보.
+- previews/: 각 후보의 정확한 16배 확대 PNG.
+- final.png, preview.png: 선택한 후보와 확대본.
+- report.json: 크기·보이는 색 수·알파·팔레트 검사, 처리 시간, 주의점.
+
+--method로 nearest·majority·grid를 선택합니다. grid는 충분한 주기적 경계가 검출될 때만 사용할 수 있습니다. 격자 탐지는 일반적인 모든 생성물을 복원한다고 보장하지 않습니다.
+
+## 이미지를 다른 규격으로 변환
+
+~~~powershell
+uv run --locked pixelart convert output/my-potion/original/source.png --size 64 --colors 16 --output output/my-potion-64
+~~~
+
+--background corner는 모서리와 비슷하며 가장자리에 연결된 배경만 제거합니다. 모서리 색이 서로 다르면 제거를 건너뛰고 보고서에 남깁니다. 흰색 장식이나 반사광이 손상될 수 있으므로 원본과 비교해야 합니다.
+
+이미 투명한 PNG는 --background alpha로 원래 알파를 이진화합니다. 불투명 결과는 --background opaque를 사용합니다. --palette에 쉼표로 구분한 #RRGGBB 색을 지정하면 그 색만 사용합니다.
+
+## 다른 PC와 원격 생성
+
+완성된 프로젝트 폴더를 통째로 옮기면 상대 경로로 이미지를 열 수 있습니다. .venv는 복사하지 않고 새 PC에서 uv sync --locked를 실행합니다. 모델·인증·설치 경로는 프로젝트에 넣지 않습니다.
+
+원격 자체 운영 ComfyUI는 profiles/remote.example.json을 로컬 설정으로 복사하고 url을 설정한 뒤 사용합니다.
+
+~~~powershell
+uv run --locked pixelart doctor --profile profiles/gpu.local.json
+uv run --locked pixelart generate --profile profiles/gpu.local.json --prompt "golden key icon" --output output/key
+~~~
+
+인증이 필요하면 token_env에 환경변수 이름을 지정합니다. 값은 설정 파일에 넣지 않습니다. 인증 토큰을 사용하는 원격 주소는 HTTPS가 필요합니다. HTTP는 localhost·127.0.0.0/8·::1의 로컬 연결이나 SSH 터널에만 허용합니다. API 리다이렉트는 따라가지 않으므로 최종 서버 주소를 설정합니다. 이 어댑터는 자체 운영 ComfyUI용이며, 관리형 Comfy Cloud MCP는 별도 인증·도구 어댑터가 필요합니다.
+
+현재 시제품의 생성 입력은 텍스트입니다. 참고 이미지 업로드·인페인트·취소와 전체 편집 UI는 후속 범위입니다.
+
+## 검증과 샘플
+
+~~~powershell
+uv run --locked python -m unittest discover -s tests -v
+uv run --locked python -m compileall -q src tests examples
+uv build --wheel
+~~~
+
+여섯 실제 샘플을 만들려면 다음을 실행합니다. 로컬 GPU를 사용하며 순차 생성합니다. 기존 작업 폴더가 있으면 새로 제출하지 않고 기록을 확인·재개합니다.
+
+~~~powershell
+uv run --locked python examples/run_samples.py
+~~~
+
+평가 대상과 시드는 examples/samples.json에 있습니다. 생성물은 output/evaluation 아래에 저장되며 Git에서 제외됩니다.
+
+## 품질 범위
+
+규격 검사 통과와 그림의 완성도는 별개입니다. 현재 결과는 모두 시각 검토 대상으로 표시합니다. 전용 픽셀 모델, 더 정교한 배경·격자 복원, 고정 스타일과 부분 편집은 이후 비교·구현합니다.
+
+- [개발 계획](픽셀아트_프로그램_개발계획.md)
+- [프로젝트 정의](docs/project.md)
+- [개발 절차](docs/workflow.md)
+- [삭제한 참고 대화 기록의 정리](docs/changes/003-remove-transcript-references/intent.md)
+- [첫 시제품 계획](docs/changes/001-generation-spike/plan.md)
+- [실행·검증 기록](docs/changes/001-generation-spike/evidence.md)
+- [검증 계약](docs/verification.md)
+- [다른 PC·원격 실행 구조](docs/architecture/execution.md)
+
+origin은 https://github.com/AtraFelis/pixelart-maker.git 입니다. 기준 브랜치는 main이며 각 작업 단위는 codex/ 브랜치와 별도 PR로 제출합니다. AI 작업 진입점은 AGENTS.md이며 Claude는 CLAUDE.md에서 시작합니다.

@@ -1,0 +1,7 @@
+{
+  "id": "local",
+  "provider": "local-mcp",
+  "command": "comfy-mcp",
+  "args": [],
+  "env_refs": {}
+}

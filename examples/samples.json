@@ -1,0 +1,8 @@
+[
+  {"name":"potion","prompt":"a small squat round potion bottle filled with bright red liquid, short brown cork, one white highlight, icon","size":32,"seed":31415},
+  {"name":"apple","prompt":"one round red apple with a short brown stem and a single green leaf, simple icon","size":32,"seed":31416},
+  {"name":"coin","prompt":"one round golden coin, front view, thick dark brown outline, simple engraved star, icon","size":32,"seed":31417},
+  {"name":"sword","prompt":"one short silver sword with a brown handle, straight blade pointing upward, simple icon","size":64,"seed":31418},
+  {"name":"chest","prompt":"one closed brown wooden treasure chest with golden bands, front three-quarter view, simple icon","size":64,"seed":31419},
+  {"name":"key","prompt":"one golden old fashioned key, round bow and two teeth, diagonal orientation, simple icon","size":32,"seed":31420}
+]

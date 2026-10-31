@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling>=1.25,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pixelart-maker"
+version = "0.1.0"
+description = "Portable ComfyUI generation and pixel-art conversion prototype"
+requires-python = ">=3.11,<3.14"
+dependencies = ["Pillow>=12.0,<13", "numpy>=2.0,<3", "mcp>=1.26,<2"]
+
+[project.scripts]
+pixelart = "pixelart.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixelart"]
