@@ -51,7 +51,21 @@ def main():
             raise RuntimeError("conversion and server-free reopen did not preserve project metadata")
         if not (output / converted["assets"]["final"]).is_file():
             raise RuntimeError("conversion did not save the final artifact")
-    print("Packaged CLI smoke passed: help, prompts, convert, inspect; Unicode and space paths; no ComfyUI")
+        wide_output = root / "큰 직사각형 출력"
+        wide = json.loads(invoke("convert", source, "--width", "128", "--height", "96",
+                                 "--export-scale", "3", "--colors", "4", "--background", "alpha",
+                                 "--output", wide_output))
+        if wide["dimensions"]["canvas"] != [128, 96] or wide["dimensions"]["export"] != [384, 288]:
+            raise RuntimeError("CLI confused pixel canvas dimensions with export dimensions")
+        with Image.open(wide_output / "final.png") as canvas, Image.open(wide_output / "export.png") as export:
+            if export.tobytes() != canvas.resize((384, 288), Image.Resampling.NEAREST).tobytes():
+                raise RuntimeError("integer export changed RGBA pixel blocks")
+        with Image.open(wide_output / "preview.png") as preview:
+            if preview.size != (1024, 768):
+                raise RuntimeError("large-canvas preview did not use a bounded integer scale")
+        if json.loads(invoke("inspect", wide_output)) != wide:
+            raise RuntimeError("rectangular dimensions did not survive server-free reopen")
+    print("Packaged CLI smoke passed: help, prompts, square/rectangular convert, integer export, inspect; Unicode and space paths; no ComfyUI")
 
 
 if __name__ == "__main__":

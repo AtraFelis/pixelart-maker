@@ -19,7 +19,7 @@ def prompt_options(command, preview=False):
 
 
 def parser():
-    result = argparse.ArgumentParser(description="Generate, compare and validate 32/64-pixel game assets.")
+    result = argparse.ArgumentParser(description="Generate, convert and validate pixel-art canvases and integer-scale exports.")
     sub = result.add_subparsers(dest="command", required=True)
     doctor = sub.add_parser("doctor", help="Check a generation target without generating")
     doctor.add_argument("--profile", type=Path)
@@ -30,7 +30,10 @@ def parser():
         command = sub.add_parser(name)
         command.add_argument("--output", type=Path, required=True, help="New project directory; never overwritten")
         command.add_argument("--prompt", default="red potion bottle, cork stopper, game inventory icon")
-        command.add_argument("--size", type=int, choices=(32, 64), default=32)
+        command.add_argument("--size", type=int, help="Square pixel canvas, 32..2048 (default 32)")
+        command.add_argument("--width", type=int, help="Pixel canvas width, 32..2048; requires --height")
+        command.add_argument("--height", type=int, help="Pixel canvas height, 32..2048; requires --width")
+        command.add_argument("--export-scale", type=int, default=1, help="Exact integer enlargement, 1..16; saves export.png")
         command.add_argument("--colors", type=int, default=16)
         command.add_argument("--seed", type=int, default=42)
         command.add_argument("--background", choices=("corner", "alpha", "opaque"), default="corner")
@@ -45,7 +48,9 @@ def parser():
             command.add_argument("--lora", default="")
             command.add_argument("--lora-strength", type=float, default=1.0)
             command.add_argument("--vae", default="")
-            command.add_argument("--generation-size", type=int, choices=(512, 768, 1024), default=1024)
+            command.add_argument("--generation-size", type=int, choices=(512, 768, 1024), help="Square generation canvas (default 1024)")
+            command.add_argument("--generation-width", type=int, help="Generation width; 256..2048, multiple of 64")
+            command.add_argument("--generation-height", type=int, help="Generation height; total source budget 1024 squared")
             command.add_argument("--steps", type=int, default=28)
             command.add_argument("--cfg", type=float, default=7.0)
             command.add_argument("--submit-only", action="store_true")
@@ -72,9 +77,12 @@ async def doctor(profile, checkpoint, lora="", vae=""):
 
 
 def summary(project):
+    request = Request.from_dict(project.manifest["request"])
     return {"project": str(project.root), "state": project.manifest["state"],
             "job_id": project.manifest.get("job_id"), "assets": project.manifest["assets"],
-            "quality": project.manifest["quality"], "prompts": saved_prompts(project)}
+            "quality": project.manifest["quality"], "prompts": saved_prompts(project),
+            "dimensions": {**request.dimensions(),
+                           "generation": list(request.generation_dimensions) if "workflow" in project.manifest["assets"] else None}}
 
 
 def main(argv=None):
@@ -104,6 +112,10 @@ def main(argv=None):
             values = {name: getattr(args, name) for name in (
                 "prompt", "size", "colors", "seed", "background", "tolerance", "padding", "method",
             )}
+            if args.size is not None and (args.width is not None or args.height is not None):
+                raise ValueError("--size cannot be combined with --width or --height")
+            values.update(width=args.width, height=args.height, export_scale=args.export_scale,
+                          size=args.size if args.size is not None else 32)
             if args.palette:
                 values["palette"] = [c.strip() for c in args.palette.split(",")]
             if args.command == "generate":
@@ -111,6 +123,12 @@ def main(argv=None):
                     "checkpoint", "generation_size", "steps", "cfg", "lora", "lora_strength", "vae",
                     "prompt_preset", "positive_prompt", "negative_prompt",
                 )})
+                if args.generation_size is not None and (
+                    args.generation_width is not None or args.generation_height is not None
+                ):
+                    raise ValueError("--generation-size cannot be combined with explicit generation dimensions")
+                values.update(generation_size=args.generation_size if args.generation_size is not None else 1024,
+                              generation_width=args.generation_width, generation_height=args.generation_height)
                 if not 0 <= args.wait_seconds <= 3600:
                     raise ValueError("wait-seconds must be 0..3600")
                 project = asyncio.run(generate(
