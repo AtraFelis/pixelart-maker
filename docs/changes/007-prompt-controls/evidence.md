@@ -41,7 +41,17 @@ UTF-8 문서 56개·로컬 링크 69개·관리/신규 파일 94개의 공백 �
 
 테스트 보강·기록 갱신 명령은 2026-10-31 자동 승인 검사의 사용량 한도 때문에 실행되지 않았다. 2026-11-01 권한 검사가 다시 가능해진 뒤 같은 범위의 작업을 재개했다. 제한을 우회하거나 실행되지 않은 명령을 성공으로 기록하지 않았다.
 
-CodeRabbit 지적에 따른 테스트 보강 후 설치 패키지 기준 전체 71개와 문법 검사가 다시 통과했다. GitHub PR 리뷰 제출은 로컬 CLI 리뷰와 별개이며, PR·Actions 실행 결과는 제출 후 기록한다.
+CodeRabbit 지적에 따른 테스트 보강 후 설치 패키지 기준 전체 71개와 문법 검사가 다시 통과했다. GitHub PR 리뷰 제출은 로컬 CLI 리뷰와 별개다. 아래 실행 결과를 확인했다.
+
+## PR과 실제 GitHub Actions
+
+기능 커밋 e3055079fee417f0954ebaecd75ee783a48eb71d를 [PR #6](https://github.com/AtraFelis/pixelart-maker/pull/6)으로 제출했다. base는 선행 문서 PR #5의 codex/006-prompt-profiles-docs다. #5 → #6 순서로 병합하며 #5가 main에 병합된 뒤 #6의 base를 main으로 변경한다. 자동 병합하지 않는다.
+
+[CI run 41271627262](https://github.com/AtraFelis/pixelart-maker/actions/runs/41271627262)의 여섯 Windows/Linux × Python 3.11/3.12/3.13 조합이 모두 completed/success였다. 각 조합은 잠금 설치·전체 테스트·문법·wheel·실제 설치 CLI 스모크를 실행했다. 이 기록은 해당 기능 커밋의 결과이며 이후 문서 기록 커밋의 실행은 PR에서 별도로 확인한다.
+
+선행 PR #5는 ff7d3aef5aa4695023e5e66c99bec9efd8a5299f에서 문서 지적을 보완했다. [CI](https://github.com/AtraFelis/pixelart-maker/actions/runs/41271440221) 여섯 조합 성공, 원래 스레드 답변·해결과 CodeRabbit의 수정 확인 답변을 확인했다. 2026-11-01T04:02:09Z 재리뷰 요청 뒤 [요약 댓글](https://github.com/AtraFelis/pixelart-maker/pull/5#issuecomment-6544307265)의 04:03:57Z 갱신에서 검토 범위 7551020..ff7d3ae와 No actionable comments를 확인했고, 요청 응답도 04:04:03Z Review finished로 끝났다. 빈 COMMENTED 스레드 답변을 전체 리뷰로 계산하지 않았다.
+
+저장소 전체 정상 요청 간격 60분을 지켜 PR #6의 GitHub CodeRabbit 리뷰는 다음 가능한 2026-11-01 14:02:09 Asia/Seoul부터 기존 coderabbit 예약에서 최신 SHA로 요청한다. 아직 요청·완료된 것으로 주장하지 않는다. 로컬 리뷰 지적은 위와 같이 판단·보완·검증했다.
 
 ## 미검증 범위
 
