@@ -13,6 +13,7 @@ from pixelart.comparison import load_definition, make_request, run_comparison
 from pixelart.config import Profile
 from pixelart.project import Project, write_json
 from pixelart.providers.base import ProviderError
+from pixelart.workflow import build_workflow
 
 
 def definition(profile):
@@ -34,6 +35,8 @@ def write_source(directory):
 def existing(root, data, profile, source=False):
     request = make_request(data, data["variants"][0], data["samples"][0])
     project = Project.create(root / "base" / "potion", request.to_dict())
+    write_json(project.root / "workflow.json", build_workflow(request, project.manifest["id"]))
+    project.add_asset("workflow", project.root / "workflow.json")
     project.update("processing" if source else "running", job_id="confirmed-job",
                    provider={"fingerprint": profile.fingerprint()})
     if source:

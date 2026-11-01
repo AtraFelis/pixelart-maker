@@ -62,7 +62,7 @@ class ReviewInputTests(unittest.TestCase):
                 root = Path(tmp)
                 sample = {"name": "potion", "prompt": "new potion", "size": 32, "seed": 42}
                 (root / "samples.json").write_text(json.dumps([sample]), encoding="utf-8")
-                values = {"prompt": sample["prompt"], "size": 32, "seed": 42, "checkpoint": "resolved.safetensors", **changed}
+                values = {"prompt": sample["prompt"], "size": 32, "seed": 42, "checkpoint": "resolved.safetensors", "prompt_preset": "item", **changed}
                 project = Project.create(root / "output" / "potion", Request(**values).to_dict())
                 project.update("review")
                 with patch.object(module, "__file__", str(root / "run_samples.py")), self.assertRaisesRegex(ValueError, "request|definition"):

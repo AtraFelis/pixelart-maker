@@ -1,6 +1,6 @@
 # 프로젝트 기본 결정
 
-상태: 첫 Python CLI 시제품 구현·로컬 검증 완료, 선택적 LoRA·VAE와 모델 비교 완료, 배경·세부 품질 개선·편집 UI는 후속 범위
+상태: 첫 Python CLI 시제품 구현·로컬 검증 완료, 선택적 LoRA·VAE와 모델 비교 완료, 프롬프트 프리셋·편집 구현, 배경·세부 품질 개선·편집 UI는 후속 범위
 갱신일: 2026년 10월 31일
 
 ## 현재 작업과 기록
@@ -9,7 +9,8 @@
 - 첫 구현: [001-generation-spike](changes/001-generation-spike/intent.md)
 - 모델 비교: [004-pixel-model-comparison](changes/004-pixel-model-comparison/intent.md), 선택적 LoRA·VAE와 세 구성의 실제 비교.
 - CI: [005-github-actions-ci](changes/005-github-actions-ci/intent.md), Windows·Linux의 잠금 설치·테스트·빌드·CLI 자동 검사.
-- 문서로 기록한 후속 작업: [006-prompt-profiles](changes/006-prompt-profiles/intent.md), 공통 기본값의 아이템 편향과 인물 요청 충돌. 앱 수정은 아직 미착수.
+- 문서로 기록한 후속 작업: [006-prompt-profiles](changes/006-prompt-profiles/intent.md), 공통 기본값의 아이템 편향과 인물 요청 충돌을 기록한 문서 전용 변경.
+- 현재 구현: [007-prompt-controls](changes/007-prompt-controls/intent.md), 공통·아이템·캐릭터 프리셋, 프롬프트 대체·저장·오프라인 조회. 사용자가 2026-10-31 “좋아. 진행해줘.”로 수락했다. 실제 검증·PR 상태는 007 evidence를 따른다.
 - 실행 구조: [002-portable-execution](changes/002-portable-execution/intent.md), 다른 PC 이동과 원격·클라우드 생성 설계.
 - 현재 문서 정리: [003-remove-transcript-references](changes/003-remove-transcript-references/intent.md), 사용자가 삭제한 참고 파일의 링크·검증 의존성 제거.
 - 001은 사용자가 2026년 10월 31일 진행을 수락했다. 구체적 실행·검증 상태는 해당 evidence에서 관리한다.
@@ -84,6 +85,6 @@
 - [x] 첫 구현 계획 수락 기록
 - [x] CLI 설치·실행·테스트 명령 구현·실행 후 등록
 
-## 알려진 생성 기본값 문제와 우선 후속 작업
+## 프롬프트 제어와 다음 작업
 
-현재 워크플로는 초기 아이템 비교용 인물 억제 네거티브와 단일 오브젝트 조건을 공통 적용한다. 이 때문에 여성 기사 같은 단일 인물 요청을 방해할 수 있다. 이 문제의 후속 기준은 [006 spec](changes/006-prompt-profiles/spec.md)에 있다. 다음 생성 기능 작업에서 공통 기본값·아이템/캐릭터 프리셋·사용자 프롬프트 편집을 우선 검토한다. 장기적인 동일 캐릭터 일관성과 별개이며 현재는 문서 기록만 완료한 상태다.
+006에서 기록한 공통 기본값의 인물 억제를 [007 구현](changes/007-prompt-controls/spec.md)으로 분리했다. 새 기본 common v1, 명시적 item/character v1과 사용자 전체 대체, 실효 텍스트 보존을 제공한다. 예전 아이템 프로젝트·비교는 동일 조건으로 해석하며 재제출하지 않는다. 실제 생성의 자세·작은 세부 표현은 별도 품질 과제다. 다음 범위는 배경·윤곽 품질 개선과 최소 편집 UI이며 아직 구현 수락·완료로 취급하지 않는다.

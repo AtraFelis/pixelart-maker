@@ -12,11 +12,12 @@ from pixelart.pipeline import generate, resume
 from pixelart.project import Project, write_json
 from pixelart.providers.base import connect
 from pixelart.request import Request
+from pixelart.prompts import PROMPT_FIELDS, resolve_prompts, saved_prompts
 
 
 VARIANT_FIELDS = {"name", "checkpoint", "lora", "lora_strength", "vae"}
 SAMPLE_FIELDS = {"name", "prompt", "size", "seed"}
-SHARED_FIELDS = {"colors", "generation_size", "steps", "cfg", "background", "tolerance", "padding", "method", "palette"}
+SHARED_FIELDS = {"colors", "generation_size", "steps", "cfg", "background", "tolerance", "padding", "method", "palette"} | PROMPT_FIELDS
 
 
 def check_fields(values, allowed, label):
@@ -38,7 +39,7 @@ def load_definition(samples_path: Path, variants_path: Path, profile: Profile):
         if any(not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", name) for name in names):
             raise ValueError("names must be safe lowercase identifiers")
     definition = {
-        "format_version": 1, "samples": samples, "variants": variants,
+        "format_version": 2, "samples": samples, "variants": variants,
         "settings": configuration["settings"], "profile_fingerprint": profile.fingerprint(),
     }
     for variant in variants:
@@ -46,7 +47,7 @@ def load_definition(samples_path: Path, variants_path: Path, profile: Profile):
             raise ValueError("comparison checkpoints must be explicit")
         for sample in samples:
             make_request(definition, variant, sample)
-    return definition
+    return normalize_definition(definition)
 
 
 def make_request(definition, variant, sample):
@@ -55,16 +56,49 @@ def make_request(definition, variant, sample):
     check_fields(sample, SAMPLE_FIELDS, "sample")
     settings = {**definition["settings"], **{k: v for k, v in variant.items() if k != "name"},
                 **{k: v for k, v in sample.items() if k != "name"}}
+    if definition.get("format_version") == 1:
+        settings.setdefault("prompt_preset", "item")
     return Request(**settings)
+
+
+def normalize_definition(definition):
+    """Pin composition for new comparisons; canonicalize equivalent legacy item runs."""
+    definition = json.loads(json.dumps(definition))
+    if definition.get("format_version") not in (1, 2):
+        raise ValueError("unsupported comparison definition version")
+    settings = definition["settings"]
+    settings.setdefault("prompt_preset", "item" if definition["format_version"] == 1 else "common")
+    settings.setdefault("prompt_preset_version", 1)
+    settings.setdefault("positive_prompt", None)
+    settings.setdefault("negative_prompt", None)
+    effective = {}
+    for variant in definition["variants"]:
+        for sample in definition["samples"]:
+            prompts = resolve_prompts(make_request(definition, variant, sample))
+            if sample["name"] in effective and effective[sample["name"]] != prompts:
+                raise ValueError("model variants must use identical effective prompts")
+            effective[sample["name"]] = prompts
+    if "effective_prompts" in definition and definition["effective_prompts"] != effective:
+        raise ValueError("pinned effective prompts differ; use a new comparison definition")
+    definition.update(format_version=2, effective_prompts=effective)
+    return definition
 
 
 def check_existing(path: Path, expected: Request):
     if not path.exists():
         return None
     project = Project.open(path)
-    actual = Request(**project.manifest["request"]).to_dict()
+    actual = Request.from_dict(project.manifest["request"]).to_dict()
     if actual != expected.to_dict():
         raise ValueError("existing project settings differ; use a new comparison output directory")
+    if project.manifest["state"] == "review" and not project.manifest["assets"].get("workflow"):
+        raise ValueError("completed comparison requires a saved workflow; inspect it or use a new output directory")
+    prompts = saved_prompts(project)
+    if prompts is None:
+        raise ValueError("existing project has no saved generation prompts; inspect it or use a new output directory")
+    expected_prompts = resolve_prompts(expected)
+    if any(prompts[key] != expected_prompts[key] for key in ("positive", "negative")):
+        raise ValueError("existing workflow prompts differ; use a new comparison output directory")
     return project
 
 
@@ -101,12 +135,13 @@ def describe(project: Project, variant, sample, elapsed=None):
 
 
 async def run_comparison(output: Path, definition: dict, profile: Profile, wait_seconds=600):
+    definition = normalize_definition(definition)
     output.mkdir(parents=True, exist_ok=True)
     ledger_path = output / "comparison.json"
     old_records = {}
     if ledger_path.exists():
         previous = json.loads(ledger_path.read_text(encoding="utf-8"))
-        if previous["definition"] != definition:
+        if normalize_definition(previous["definition"]) != definition:
             raise ValueError("comparison definition changed; choose a new output directory")
         old_records = {(r["variant"], r["sample"]): r for r in previous["records"]}
     records = []

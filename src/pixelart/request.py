@@ -2,6 +2,8 @@ from dataclasses import asdict, dataclass, field
 import math
 import re
 
+from pixelart.prompts import PROMPT_FIELDS, validate_options
+
 
 @dataclass
 class Request:
@@ -21,8 +23,13 @@ class Request:
     padding: int = 2
     method: str = "majority"
     palette: list[str] = field(default_factory=list)
+    prompt_preset: str = "common"
+    prompt_preset_version: int = 1
+    positive_prompt: str | None = None
+    negative_prompt: str | None = None
 
     def __post_init__(self):
+        validate_options(self)
         if not isinstance(self.prompt, str) or not self.prompt.strip():
             raise ValueError("prompt must not be empty")
         if self.size not in (32, 64):
@@ -56,6 +63,13 @@ class Request:
                 raise ValueError("palette entries must be #RRGGBB")
         if self.palette and len(self.palette) > self.colors:
             raise ValueError("fixed palette exceeds colors")
+
+    @classmethod
+    def from_dict(cls, values):
+        values = dict(values)
+        if not PROMPT_FIELDS.intersection(values):
+            values["prompt_preset"] = "item"
+        return cls(**values)
 
     def to_dict(self):
         return asdict(self)

@@ -30,8 +30,12 @@ def main():
         return result.stdout
 
     help_text = invoke("--help")
-    if not all(name in help_text for name in ("generate", "convert", "resume", "inspect")):
+    if not all(name in help_text for name in ("generate", "convert", "resume", "inspect", "prompts")):
         raise RuntimeError("installed CLI help is missing expected commands")
+    prompts = json.loads(invoke("prompts", "--prompt", "금발 여성 기사", "--prompt-preset", "character",
+                                "--negative-prompt", ""))
+    if prompts["preset"] != "character" or prompts["negative"] != "" or "금발 여성 기사" not in prompts["positive"]:
+        raise RuntimeError("offline prompt preview lost the selected preset, Unicode input or empty override")
     with TemporaryDirectory(prefix="pixelart-ci-") as temporary:
         root = Path(temporary) / "한글 경로 with spaces"
         root.mkdir()
@@ -47,7 +51,7 @@ def main():
             raise RuntimeError("conversion and server-free reopen did not preserve project metadata")
         if not (output / converted["assets"]["final"]).is_file():
             raise RuntimeError("conversion did not save the final artifact")
-    print("Packaged CLI smoke passed: help, convert, inspect; Unicode and space paths; no ComfyUI")
+    print("Packaged CLI smoke passed: help, prompts, convert, inspect; Unicode and space paths; no ComfyUI")
 
 
 if __name__ == "__main__":
