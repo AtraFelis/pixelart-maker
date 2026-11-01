@@ -16,8 +16,9 @@ from pixelart.prompts import PROMPT_FIELDS, resolve_prompts, saved_prompts
 
 
 VARIANT_FIELDS = {"name", "checkpoint", "lora", "lora_strength", "vae"}
-SAMPLE_FIELDS = {"name", "prompt", "size", "seed"}
-SHARED_FIELDS = {"colors", "generation_size", "steps", "cfg", "background", "tolerance", "padding", "method", "palette"} | PROMPT_FIELDS
+SAMPLE_FIELDS = {"name", "prompt", "size", "width", "height", "seed"}
+SHARED_FIELDS = {"colors", "generation_size", "steps", "cfg", "background", "tolerance", "padding", "method", "palette",
+                 "export_scale", "generation_width", "generation_height"} | PROMPT_FIELDS
 
 
 def check_fields(values, allowed, label):
@@ -54,6 +55,11 @@ def make_request(definition, variant, sample):
     check_fields(definition["settings"], SHARED_FIELDS, "shared settings")
     check_fields(variant, VARIANT_FIELDS, "variant")
     check_fields(sample, SAMPLE_FIELDS, "sample")
+    if sample.get("size") is not None and any(sample.get(key) is not None for key in ("width", "height")):
+        raise ValueError("sample size cannot be combined with width or height")
+    shared = definition["settings"]
+    if shared.get("generation_size") is not None and any(shared.get(key) is not None for key in ("generation_width", "generation_height")):
+        raise ValueError("shared generation_size cannot be combined with explicit generation dimensions")
     settings = {**definition["settings"], **{k: v for k, v in variant.items() if k != "name"},
                 **{k: v for k, v in sample.items() if k != "name"}}
     if definition.get("format_version") == 1:
@@ -69,6 +75,7 @@ def normalize_definition(definition):
     settings = definition["settings"]
     settings.setdefault("prompt_preset", "item" if definition["format_version"] == 1 else "common")
     settings.setdefault("prompt_preset_version", 1)
+    settings.setdefault("export_scale", 1)
     settings.setdefault("positive_prompt", None)
     settings.setdefault("negative_prompt", None)
     effective = {}

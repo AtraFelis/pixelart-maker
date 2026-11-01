@@ -1,6 +1,6 @@
 # AI 픽셀아트 제작 시제품
 
-Python 명령줄에서 소재를 생성하고 32×32·64×64 픽셀 PNG로 정리하는 시제품입니다. 생성 원본, 변환 후보, 16배 확대본, 설정·검사 보고서를 프로젝트 폴더에 저장합니다.
+Python 명령줄에서 소재를 생성하고 각 변 32~2048픽셀의 정사각형·직사각형 PNG로 정리하는 시제품입니다. 픽셀 작업 이미지와 정수 배율의 화면용 출력을 분리하며, 원본·변환 후보·미리보기·설정·검사 보고서를 프로젝트 폴더에 저장합니다.
 
 로컬 ComfyUI MCP 연결을 실제 검증했습니다. 자체 운영 ComfyUI HTTP 어댑터도 구현했으며 모의 서버로 검사했습니다. 실제 다른 PC·클라우드 실행과 편집 UI는 아직 검증하지 않았습니다.
 
@@ -69,6 +69,30 @@ uv run --locked pixelart prompts --prompt "knight" --positive-prompt "pixel art,
 
 새 생성은 프리셋 이름·버전 1, 입력과 실효 텍스트를 저장합니다. prompts --project와 inspect는 저장한 실제 워크플로의 텍스트를 읽습니다. --project 조회에는 편집 옵션을 섞을 수 없습니다. 예전 프로젝트의 기록에 없는 프리셋을 추측해 표시하지 않으며, 재개는 저장된 워크플로를 수정하거나 작업을 다시 제출하지 않습니다. 원본 이미지 변환 프로젝트에는 생성 프롬프트 기록이 없습니다.
 
+## 큰 픽셀 캔버스와 정수 확대 출력
+
+--size는 픽셀 작업 이미지의 정사각형 크기입니다. 32·64뿐 아니라 128·256·512·1024·2048 등 32~2048의 정수를 사용할 수 있습니다. 직사각형은 --width와 --height를 함께 지정하며 --size와 혼용하지 않습니다. --export-scale은 1~16의 정수 배율입니다.
+
+~~~powershell
+uv run --locked pixelart generate --prompt-preset character --prompt "blonde female knight, upright sword salute, silver armor, plain white background" --size 256 --output output/knight-256
+uv run --locked pixelart generate --prompt "wide pixel art medieval courtyard, distant castle and green hills" --width 480 --height 270 --export-scale 4 --generation-width 1024 --generation-height 576 --background opaque --padding 0 --colors 32 --checkpoint sd_xl_base_1.0.safetensors --lora pixel-art-xl.safetensors --vae sdxl_vae_fp16_fix.safetensors --output output/my-wide-scene
+~~~
+
+두 번째 예제는 ComfyUI 원본 1024×576, 픽셀 작업 final.png 480×270, 화면용 export.png 1920×1080을 저장합니다. export는 작업 픽셀 하나를 정확한 4×4 RGBA 블록으로 복제합니다. 배율 1도 export.png를 저장합니다. 네이티브 1920×1080 작업 이미지를 원하면 --width 1920 --height 1080을 지정합니다. 원본보다 크게 맞추는 것은 업스케일이며 새 세부를 생성하지 않습니다.
+
+생성 크기는 작업/내보내기 크기와 별개입니다. 기존 --generation-size 512/768/1024를 유지하고, 직사각형은 --generation-width와 --generation-height를 함께 사용합니다. 각 변 256~2048·64의 배수, 총 1,048,576픽셀 이하이며 정사각형 옵션과 혼용하지 않습니다. 생성 크기를 작업 크기에 맞춰 자동으로 크게 올리거나 타일별 GPU 작업을 추가하지 않습니다. 모델과 VRAM의 실제 호환성은 선택한 서버에서 검사합니다.
+
+출력은 각 변 8192 이하이면서 전체 16,777,216픽셀 이하여야 합니다. 예를 들어 960×540의 4배 출력은 3840×2160입니다. 상한·잘못된 쌍·혼용은 생성 제출 전에 거절합니다. 미리보기는 최대 16배, 긴 변 기준 1024 안에 드는 정수 배율을 사용하되 이미 큰 작업 이미지는 1배로 보존합니다. 따라서 32·64는 기존 16배, 128은 8배, 480×270은 2배, 1024 이상은 1배입니다.
+
+기존 원본으로 크기를 시험하려면 생성 서버 없이 새 프로젝트로 변환합니다.
+
+~~~powershell
+uv run --locked pixelart convert output/my-knight/original/source.png --size 256 --colors 16 --output output/knight-converted-256
+uv run --locked pixelart inspect output/my-wide-scene
+~~~
+
+검사 보고서와 inspect의 dimensions에서 작업·미리보기·내보내기 크기를 구분합니다. 생성 프로젝트에는 설정한 생성 크기도 표시하며 report에는 실제 수집 원본 크기를 기록합니다. 정수 출력은 픽셀 블록 동일성을 보장하지만 스타일·격자 복원·요청 자세의 품질 보장은 아닙니다. 타일/구역별 AI 생성과 편집 UI는 후속 범위입니다.
+
 ## 결과물
 
 프로젝트 폴더에는 다음 파일이 생깁니다.
@@ -77,9 +101,10 @@ uv run --locked pixelart prompts --prompt "knight" --positive-prompt "pixel art,
 - request.json, prompts.json, workflow.json: 생성 요청, 프리셋·사용자 입력·실효 프롬프트, 실행 그래프. project.json에도 실효 프롬프트가 저장됩니다.
 - original/: 생성 원본과 후처리 입력. 다시 생성하지 않고 재사용 가능.
 - candidates/: nearest·majority, 주기적 격자가 검출되면 실험적 grid 후보.
-- previews/: 각 후보의 정확한 16배 확대 PNG.
-- final.png, preview.png: 선택한 후보와 확대본.
-- report.json: 크기·보이는 색 수·알파·팔레트 검사, 처리 시간, 주의점.
+- previews/: 각 후보의 정수 배율 미리보기 PNG. 32·64는 기존 16배이며 큰 작업 이미지는 배율을 제한합니다.
+- final.png, preview.png: 선택한 픽셀 작업 이미지와 미리보기.
+- export.png: --export-scale에 따른 정수 확대 출력. 기본 배율은 1입니다.
+- report.json: 작업/생성/원본/미리보기/내보내기 크기, 색 수·알파·팔레트·정수 블록 동일성 검사, 처리 시간, 주의점.
 
 --method로 nearest·majority·grid를 선택합니다. grid는 충분한 주기적 경계가 검출될 때만 사용할 수 있습니다. 격자 탐지는 일반적인 모든 생성물을 복원한다고 보장하지 않습니다.
 
@@ -154,13 +179,15 @@ uv run --locked python examples/compare_models.py
 
 비교는 기존 모델·SDXL base·같은 base에 Pixel Art XL을 적용한 세 구성에서 여섯 소재를 순차 생성합니다. [고정 조건](examples/model_variants.json), 기존 samples.json의 프롬프트·시드를 사용하며 output/model-comparison에 원본·32/64 최종·확대본·comparison.json을 저장합니다. 기존 결과는 요청이 일치할 때만 재사용합니다. 설정을 바꾸면 --output으로 새 폴더를 지정합니다. 접수 여부가 불명확하면 자동 재제출하지 않습니다.
 
-변형 설정에는 name·checkpoint·lora·lora_strength·vae만, 샘플에는 name·prompt·size·seed만 허용합니다. 공통 생성·후처리 조건과 prompt_preset·prompt_preset_version·positive_prompt·negative_prompt는 settings에만 둡니다. 새 비교 정의 v2는 샘플별 실효 텍스트도 고정합니다. 예제는 이전과 동일한 item v1을 명시합니다. 예전 v1 비교는 item v1으로 정규화해 동등할 때만 재사용하며, 기본 common으로 바꾸면 새 출력 폴더가 필요합니다. 다른 영역의 필드를 넣으면 실행 전에 거절합니다. 기존 작업 ID의 수집은 모델·노드를 다시 점검하지 않고, 원본이 저장된 프로젝트는 서버 없이 재처리합니다. 사전 점검은 새 작업 제출 때 수행합니다.
+변형 설정에는 name·checkpoint·lora·lora_strength·vae만, 샘플에는 name·prompt·size·seed만 허용합니다. 샘플의 직사각형은 width·height를 함께 사용하고 size와 혼용하지 않습니다. generation_width·generation_height 및 export_scale은 공유 settings에만 둡니다. 공통 생성·후처리 조건과 prompt_preset·prompt_preset_version·positive_prompt·negative_prompt는 settings에만 둡니다. 새 비교 정의 v2는 샘플별 실효 텍스트도 고정합니다. 예제는 이전과 동일한 item v1을 명시합니다. 예전 v1 비교는 item v1으로 정규화해 동등할 때만 재사용하며, 기본 common으로 바꾸면 새 출력 폴더가 필요합니다. 다른 영역의 필드를 넣으면 실행 전에 거절합니다. 기존 작업 ID의 수집은 모델·노드를 다시 점검하지 않고, 원본이 저장된 프로젝트는 서버 없이 재처리합니다. 사전 점검은 새 작업 제출 때 수행합니다.
 
 실제 18개 생성의 기술 검사는 모두 통과했고 LoRA 구성에서 동전·닫힌 상자가 개선됐습니다. 그림자·라벨·방향과 작은 크기의 세부 손실은 남아 있습니다. [비교 평가](docs/changes/004-pixel-model-comparison/evaluation.md)를 참고하세요.
 
 ## 품질 범위
 
 [007 프롬프트 제어](docs/changes/007-prompt-controls/spec.md)에서 공통 기본값의 인물 억제를 분리하고 프리셋·전체 텍스트 대체·오프라인 확인을 구현했습니다. 단일 캐릭터의 요청 준수와 장기적인 동일 캐릭터 일관성은 별도로 평가합니다. 실제 검증·표현 한계는 [007 검증 기록](docs/changes/007-prompt-controls/evidence.md)을 따릅니다.
+
+[008 큰 캔버스 명세](docs/changes/008-canvas-sizes/spec.md)와 [검증 기록](docs/changes/008-canvas-sizes/evidence.md)에서 크기 제한·정수 내보내기·이전 결과 호환성을 관리합니다.
 
 규격 검사 통과와 그림의 완성도는 별개입니다. 현재 결과는 모두 시각 검토 대상으로 표시합니다. 전용 픽셀 LoRA의 첫 비교는 완료했습니다. 더 정교한 배경·격자 복원, 고정 스타일과 부분 편집은 후속 범위입니다.
 

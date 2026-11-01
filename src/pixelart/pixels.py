@@ -79,6 +79,15 @@ def majority_resize(image: Image.Image, size: tuple[int, int]):
     pixels = np.array(image)
     height, width = pixels.shape[:2]
     out_w, out_h = size
+    if out_w >= width and out_h >= height:
+        # Each old voting cell contains exactly one source pixel when enlarging.
+        # Keep the original floor-based coordinates (not Pillow's center-based nearest).
+        ys = np.arange(out_h) * height // out_h
+        xs = np.arange(out_w) * width // out_w
+        output = pixels[np.ix_(ys, xs)].copy()
+        output[:, :, 3] = np.where(output[:, :, 3] > 0, 255, 0)
+        output[output[:, :, 3] == 0] = 0
+        return Image.fromarray(output)
     output = np.zeros((out_h, out_w, 4), dtype=np.uint8)
     for y in range(out_h):
         top, bottom = y * height // out_h, max(y * height // out_h + 1, (y + 1) * height // out_h)
@@ -94,37 +103,40 @@ def majority_resize(image: Image.Image, size: tuple[int, int]):
 
 def convert(image: Image.Image, request: Request):
     prepared, notes = prepare(image, request)
+    canvas_width, canvas_height = request.canvas_dimensions
     palette = palette_for(prepared, request)
     bounds = prepared.getchannel("A").getbbox()
     if bounds is None:
         if request.method == "grid":
             raise ValueError("no periodic grid detected in empty foreground; choose nearest or majority")
         notes.append("Empty foreground: technical validity does not imply usable artwork.")
-        blank = Image.new("RGBA", (request.size, request.size))
+        blank = Image.new("RGBA", (canvas_width, canvas_height))
         return {"nearest": blank.copy(), "majority": blank.copy()}, palette, notes
     cropped = map_palette(prepared.crop(bounds), palette)
-    limit = request.size - 2 * request.padding
-    ratio = min(limit / cropped.width, limit / cropped.height)
+    limit_width, limit_height = canvas_width - 2 * request.padding, canvas_height - 2 * request.padding
+    ratio = min(limit_width / cropped.width, limit_height / cropped.height)
     size = (max(1, round(cropped.width * ratio)), max(1, round(cropped.height * ratio)))
+    if ratio > 1:
+        notes.append("The fitted canvas enlarges the source; this does not create new image detail.")
     candidates = {}
     for name, scaled in (
         ("nearest", cropped.resize(size, Image.Resampling.NEAREST)),
         ("majority", majority_resize(cropped, size)),
     ):
         background = (255, 255, 255, 255) if request.background == "opaque" else (0, 0, 0, 0)
-        canvas = Image.new("RGBA", (request.size, request.size), background)
-        canvas.paste(scaled, ((request.size - size[0]) // 2, (request.size - size[1]) // 2))
+        canvas = Image.new("RGBA", (canvas_width, canvas_height), background)
+        canvas.paste(scaled, ((canvas_width - size[0]) // 2, (canvas_height - size[1]) // 2))
         # In opaque mode the padding must also obey the chosen palette.
         canvas = map_palette(canvas, palette)
         candidates[name] = canvas
     recovered, grid = recover_grid(prepared)
     if recovered is not None and recovered.getchannel("A").getbbox():
         grid_crop = map_palette(recovered.crop(recovered.getchannel("A").getbbox()), palette)
-        grid_ratio = min(limit / grid_crop.width, limit / grid_crop.height)
+        grid_ratio = min(limit_width / grid_crop.width, limit_height / grid_crop.height)
         grid_size = (max(1, round(grid_crop.width * grid_ratio)), max(1, round(grid_crop.height * grid_ratio)))
-        grid_canvas = Image.new("RGBA", (request.size, request.size), background)
+        grid_canvas = Image.new("RGBA", (canvas_width, canvas_height), background)
         grid_canvas.paste(grid_crop.resize(grid_size, Image.Resampling.NEAREST),
-                          ((request.size - grid_size[0]) // 2, (request.size - grid_size[1]) // 2))
+                          ((canvas_width - grid_size[0]) // 2, (canvas_height - grid_size[1]) // 2))
         candidates["grid"] = map_palette(grid_canvas, palette)
     notes.append({"grid_recovery": grid})
     if request.method not in candidates:

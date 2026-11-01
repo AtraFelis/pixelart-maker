@@ -10,7 +10,7 @@ def build_workflow(request: Request, project_id: str):
         "2": {"class_type": "CLIPTextEncode", "inputs": {"text": prompts["positive"], "clip": ["1", 1]}},
         "3": {"class_type": "CLIPTextEncode", "inputs": {"text": prompts["negative"], "clip": ["1", 1]}},
         "4": {"class_type": "EmptyLatentImage", "inputs": {
-            "width": request.generation_size, "height": request.generation_size, "batch_size": 1,
+            "width": request.generation_dimensions[0], "height": request.generation_dimensions[1], "batch_size": 1,
         }},
         "5": {"class_type": "KSampler", "inputs": {
             "seed": request.seed, "steps": request.steps, "cfg": request.cfg,
