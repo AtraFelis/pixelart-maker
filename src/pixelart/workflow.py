@@ -1,25 +1,14 @@
 from pixelart.request import Request
 
-
-NEGATIVE = (
-    "photorealistic, 3d render, gradient background, complex background, text, "
-    "letters, watermark, blurry, tiny details, multiple objects, cropped, out of frame, "
-    "user interface, HUD, border, frame, screenshot, infographic, panel, scenery, human, person, "
-    "body, face, room, architecture, photorealistic, reflection, cast shadow"
-)
+from pixelart.prompts import resolve_prompts
 
 
 def build_workflow(request: Request, project_id: str):
-    prompt = (
-        "masterpiece, best quality, pixel art, flat 2d sprite of " + request.prompt.strip() +
-        ", (single isolated object:1.3), centered, simple silhouette, bold black outline, "
-        "few flat solid colors, minimal details, generous empty margin, "
-        "(plain solid white background:1.5), no shadow, no text, no frame"
-    )
+    prompts = resolve_prompts(request)
     graph = {
         "1": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": request.checkpoint}},
-        "2": {"class_type": "CLIPTextEncode", "inputs": {"text": prompt, "clip": ["1", 1]}},
-        "3": {"class_type": "CLIPTextEncode", "inputs": {"text": NEGATIVE, "clip": ["1", 1]}},
+        "2": {"class_type": "CLIPTextEncode", "inputs": {"text": prompts["positive"], "clip": ["1", 1]}},
+        "3": {"class_type": "CLIPTextEncode", "inputs": {"text": prompts["negative"], "clip": ["1", 1]}},
         "4": {"class_type": "EmptyLatentImage", "inputs": {
             "width": request.generation_size, "height": request.generation_size, "batch_size": 1,
         }},

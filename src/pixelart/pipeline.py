@@ -11,6 +11,7 @@ from PIL import Image
 from pixelart.config import Profile
 from pixelart.pixels import convert, save_png
 from pixelart.project import Project, write_json
+from pixelart.prompts import resolve_prompts
 from pixelart.providers.base import ProviderError, SubmissionUnknown, connect
 from pixelart.request import Request
 from pixelart.validation import validate
@@ -25,7 +26,7 @@ def environment():
 
 def process(project: Project):
     started = time.monotonic()
-    request = Request(**project.manifest["request"])
+    request = Request.from_dict(project.manifest["request"])
     source = project.asset(project.manifest["assets"]["source"])
     project.update("processing")
     with Image.open(source) as image:
@@ -98,6 +99,10 @@ async def generate(output: Path, request: Request, profile: Profile, submit_only
             request.checkpoint = preflight["checkpoint"]
             project.manifest["request"] = request.to_dict()
             write_json(project.root / "request.json", request.to_dict())
+            prompts = resolve_prompts(request)
+            project.manifest["prompts"] = prompts
+            write_json(project.root / "prompts.json", prompts)
+            project.add_asset("prompts", project.root / "prompts.json")
             workflow_path = project.root / "workflow.json"
             write_json(workflow_path, build_workflow(request, project.manifest["id"]))
             project.add_asset("workflow", workflow_path)

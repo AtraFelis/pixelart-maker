@@ -7,7 +7,9 @@
     "background": "corner",
     "tolerance": 36,
     "padding": 2,
-    "method": "majority"
+    "method": "majority",
+    "prompt_preset": "item",
+    "prompt_preset_version": 1
   },
   "variants": [
     {

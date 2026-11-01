@@ -93,3 +93,13 @@ UI·참고 이미지 업로드·부분 재생성·취소·DB는 이 시제품 �
 잠금 불일치·실패 테스트·빌드/CLI 오류는 0이 아닌 코드로 실패해야 한다. CI는 ComfyUI·GPU·모델·생성 API 인증을 요구하지 않는다. 실제 GPU 생성·시각 평가는 별도 통합 검사다. Linux CPU 검사 통과가 Linux에서 실제 ComfyUI 생성까지 검증했다는 뜻은 아니다.
 
 워크플로 변경은 actionlint로 문법·표현식을 확인하고 등록된 문서·공백 검사도 수행한다. 로컬 재현과 실제 GitHub-hosted 결과를 구별해 005 evidence에 실행 URL과 함께 기록한다. 브랜치 보호·필수 상태 검사 지정은 이번 변경에 포함하지 않는다.
+
+## 프롬프트 제어
+
+007은 전체 unittest에서 공통 인물 억제 회귀, item v1 텍스트 동일성, character·양/음성 전체 대체·빈 네거티브·입력 오류, 저장 워크플로/메타데이터 일치, 오프라인 미리보기, 예전 프로젝트 무재제출과 비교 정의 호환성을 검사한다. scripts/smoke_cli.py는 설치된 CLI의 한글 프롬프트·빈 음성 인자도 실행한다.
+
+- 오프라인 미리보기: uv run --locked pixelart prompts --prompt-preset character --prompt "blonde female knight, upright sword salute".
+- 저장 텍스트 조회: uv run --locked pixelart prompts --project <생성 프로젝트>.
+- 실제 통합: 기존 item v1 여섯 소재의 저장 그래프/출력 보존과 새 common·character 여성 기사 64픽셀 결과를 함께 확인한다. GPU 생성은 별도이며 원본·실제 크기·확대본의 특징·방향·경례 자세를 구분해 007 evidence에 기록한다.
+
+새 필드가 모두 없는 요청과 비교 정의 v1은 item v1으로 정규화한다. 실제 예전 텍스트는 저장된 그래프에서 읽으며 새 기본값으로 다시 구성하지 않는다. 비교 재사용은 요청과 실효 텍스트가 확인된 경우에만 허용한다.

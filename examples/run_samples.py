@@ -18,10 +18,10 @@ async def run(args):
         directory = args.output / sample["name"]
         print(json.dumps({"sample": sample["name"], "event": "starting"}), flush=True)
         request = Request(prompt=sample["prompt"], size=sample["size"], seed=sample["seed"],
-                          generation_size=1024, steps=28, cfg=7)
+                          generation_size=1024, steps=28, cfg=7, prompt_preset="item")
         if directory.exists():
             project = Project.open(directory)
-            saved = Request(**project.manifest["request"])
+            saved = Request.from_dict(project.manifest["request"])
             # An unspecified checkpoint resolves on first submit; all requested settings must still match.
             request.checkpoint = saved.checkpoint
             if saved.to_dict() != request.to_dict():

@@ -25,14 +25,14 @@ PC별 실행 파일 위치가 PATH에 없으면 profiles/local.example.json을 p
 
 ~~~powershell
 uv run --locked pixelart doctor --profile profiles/my.local.json
-uv run --locked pixelart generate --profile profiles/my.local.json --prompt "red potion bottle icon" --output output/local-potion
+uv run --locked pixelart generate --prompt-preset item --profile profiles/my.local.json --prompt "red potion bottle icon" --output output/local-potion
 uv run --locked pixelart resume output/local-potion --profile profiles/my.local.json
 ~~~
 
 ## 물약 만들기
 
 ~~~powershell
-uv run --locked pixelart generate --prompt "a small round bottle of red healing potion, brown cork, icon" --size 32 --colors 16 --output output/my-potion
+uv run --locked pixelart generate --prompt-preset item --prompt "a small round bottle of red healing potion, brown cork, icon" --size 32 --colors 16 --output output/my-potion
 ~~~
 
 기본값은 생성 1024×1024, 28 steps, CFG 7, seed 42입니다. --checkpoint로 대상 서버에 있는 모델을 선택할 수 있습니다. 기본 워크플로는 코어 노드만 사용합니다. 선택한 LoRA·VAE는 서버에 미리 설치되어 있어야 하며 앱이 자동 다운로드하거나 커스텀 노드·유료 API를 호출하지 않습니다.
@@ -49,12 +49,32 @@ uv run --locked pixelart resume output/my-potion
 uv run --locked pixelart inspect output/my-potion
 ~~~
 
+## 프롬프트 확인과 소재 선택
+
+생성의 기본값은 common v1이며 인물·사물·배경을 임의로 억제하지 않습니다. --prompt-preset item은 예전 단일 아이템 실험 조건(흰 배경·인물 억제 포함), character는 인물 실루엣과 자세의 가독성을 유도합니다. 프리셋은 요청을 돕는 조건이며 자세 준수를 보장하지 않습니다.
+
+서버 연결 전에 실제 적용할 양성·음성 텍스트를 확인할 수 있습니다.
+
+~~~powershell
+uv run --locked pixelart prompts --prompt-preset character --prompt "blonde female knight, formal sword salute, sword tip pointing straight up, silver armor, full body, plain white background"
+uv run --locked pixelart generate --prompt-preset character --prompt "blonde female knight, formal sword salute, sword tip pointing straight up, silver armor, full body, plain white background" --size 64 --output output/my-knight
+uv run --locked pixelart prompts --project output/my-knight
+~~~
+
+--prompt는 소재 설명입니다. 먼저 프리셋이 설명을 포함한 양성·음성 텍스트를 구성하고, --positive-prompt 또는 --negative-prompt를 지정하면 **해당 텍스트 전체를 대체**합니다. 양성 대체는 빈 값을 거절하고 음성 대체의 빈 문자열은 네거티브를 끕니다. Python API에서도 negative_prompt=""로 설정할 수 있습니다. PowerShell은 빈 인자를 전달할 수 있는 최신 버전을 사용하세요.
+
+~~~powershell
+uv run --locked pixelart prompts --prompt "knight" --positive-prompt "pixel art, blonde female knight saluting, upright sword" --negative-prompt "blurry, watermark"
+~~~
+
+새 생성은 프리셋 이름·버전 1, 입력과 실효 텍스트를 저장합니다. prompts --project와 inspect는 저장한 실제 워크플로의 텍스트를 읽습니다. --project 조회에는 편집 옵션을 섞을 수 없습니다. 예전 프로젝트의 기록에 없는 프리셋을 추측해 표시하지 않으며, 재개는 저장된 워크플로를 수정하거나 작업을 다시 제출하지 않습니다. 원본 이미지 변환 프로젝트에는 생성 프롬프트 기록이 없습니다.
+
 ## 결과물
 
 프로젝트 폴더에는 다음 파일이 생깁니다.
 
 - project.json: 상대 경로 자산 목록, 작업 상태·생성 ID, 설정.
-- request.json, workflow.json: 생성 요청과 실행 그래프.
+- request.json, prompts.json, workflow.json: 생성 요청, 프리셋·사용자 입력·실효 프롬프트, 실행 그래프. project.json에도 실효 프롬프트가 저장됩니다.
 - original/: 생성 원본과 후처리 입력. 다시 생성하지 않고 재사용 가능.
 - candidates/: nearest·majority, 주기적 격자가 검출되면 실험적 grid 후보.
 - previews/: 각 후보의 정확한 16배 확대 PNG.
@@ -81,7 +101,7 @@ uv run --locked pixelart convert output/my-potion/original/source.png --size 64 
 
 ~~~powershell
 uv run --locked pixelart doctor --profile profiles/gpu.local.json
-uv run --locked pixelart generate --profile profiles/gpu.local.json --prompt "golden key icon" --output output/key
+uv run --locked pixelart generate --prompt-preset item --profile profiles/gpu.local.json --prompt "golden key icon" --output output/key
 ~~~
 
 인증이 필요하면 token_env에 환경변수 이름을 지정합니다. 값은 설정 파일에 넣지 않습니다. 인증 토큰을 사용하는 원격 주소는 HTTPS가 필요합니다. HTTP는 localhost·127.0.0.0/8·::1의 로컬 연결이나 SSH 터널에만 허용합니다. API 리다이렉트는 따라가지 않으므로 최종 서버 주소를 설정합니다. 이 어댑터는 자체 운영 ComfyUI용이며, 관리형 Comfy Cloud MCP는 별도 인증·도구 어댑터가 필요합니다.
@@ -116,7 +136,7 @@ uv build --wheel
 uv run --no-sync python scripts/smoke_cli.py
 ~~~
 
-스모크 검사는 설치된 CLI로 합성 PNG 변환과 프로젝트 재열기를 확인합니다. ComfyUI·GPU·모델·생성용 비밀정보가 필요 없습니다. 실제 생성·그림 품질 평가는 별도입니다. --no-editable은 저장소 소스 대신 설치된 패키지의 CLI를 검사하기 위한 옵션입니다. 소스 수정이 바로 반영되는 개발 설치로 돌아가려면 uv sync --locked를 실행합니다.
+스모크 검사는 설치된 CLI로 오프라인 프롬프트 미리보기·합성 PNG 변환·프로젝트 재열기를 확인합니다. ComfyUI·GPU·모델·생성용 비밀정보가 필요 없습니다. 실제 생성·그림 품질 평가는 별도입니다. --no-editable은 저장소 소스 대신 설치된 패키지의 CLI를 검사하기 위한 옵션입니다. 소스 수정이 바로 반영되는 개발 설치로 돌아가려면 uv sync --locked를 실행합니다.
 
 CI의 실제 실행 증거와 CodeRabbit 검토는 [005 검증 기록](docs/changes/005-github-actions-ci/evidence.md)에 남깁니다. 브랜치 보호의 필수 검사 설정은 별도이며 이 워크플로 추가만으로 병합을 강제로 차단하지는 않습니다.
 
@@ -126,7 +146,7 @@ Pixel Art XL은 SDXL용 LoRA입니다. 아래 파일을 대상 ComfyUI의 checkp
 
 ~~~powershell
 uv run --locked pixelart doctor --checkpoint sd_xl_base_1.0.safetensors --lora pixel-art-xl.safetensors --vae sdxl_vae_fp16_fix.safetensors
-uv run --locked pixelart generate --checkpoint sd_xl_base_1.0.safetensors --lora pixel-art-xl.safetensors --lora-strength 1 --vae sdxl_vae_fp16_fix.safetensors --prompt "one round golden coin with an engraved star, icon" --seed 31417 --output output/pixel-coin
+uv run --locked pixelart generate --prompt-preset item --checkpoint sd_xl_base_1.0.safetensors --lora pixel-art-xl.safetensors --lora-strength 1 --vae sdxl_vae_fp16_fix.safetensors --prompt "one round golden coin with an engraved star, icon" --seed 31417 --output output/pixel-coin
 uv run --locked python examples/compare_models.py
 ~~~
 
@@ -134,13 +154,13 @@ uv run --locked python examples/compare_models.py
 
 비교는 기존 모델·SDXL base·같은 base에 Pixel Art XL을 적용한 세 구성에서 여섯 소재를 순차 생성합니다. [고정 조건](examples/model_variants.json), 기존 samples.json의 프롬프트·시드를 사용하며 output/model-comparison에 원본·32/64 최종·확대본·comparison.json을 저장합니다. 기존 결과는 요청이 일치할 때만 재사용합니다. 설정을 바꾸면 --output으로 새 폴더를 지정합니다. 접수 여부가 불명확하면 자동 재제출하지 않습니다.
 
-변형 설정에는 name·checkpoint·lora·lora_strength·vae만, 샘플에는 name·prompt·size·seed만 허용합니다. 공통 생성·후처리 조건은 settings에 둡니다. 다른 영역의 필드를 넣으면 실행 전에 거절합니다. 기존 작업 ID의 수집은 모델·노드를 다시 점검하지 않고, 원본이 저장된 프로젝트는 서버 없이 재처리합니다. 사전 점검은 새 작업 제출 때 수행합니다.
+변형 설정에는 name·checkpoint·lora·lora_strength·vae만, 샘플에는 name·prompt·size·seed만 허용합니다. 공통 생성·후처리 조건과 prompt_preset·prompt_preset_version·positive_prompt·negative_prompt는 settings에만 둡니다. 새 비교 정의 v2는 샘플별 실효 텍스트도 고정합니다. 예제는 이전과 동일한 item v1을 명시합니다. 예전 v1 비교는 item v1으로 정규화해 동등할 때만 재사용하며, 기본 common으로 바꾸면 새 출력 폴더가 필요합니다. 다른 영역의 필드를 넣으면 실행 전에 거절합니다. 기존 작업 ID의 수집은 모델·노드를 다시 점검하지 않고, 원본이 저장된 프로젝트는 서버 없이 재처리합니다. 사전 점검은 새 작업 제출 때 수행합니다.
 
 실제 18개 생성의 기술 검사는 모두 통과했고 LoRA 구성에서 동전·닫힌 상자가 개선됐습니다. 그림자·라벨·방향과 작은 크기의 세부 손실은 남아 있습니다. [비교 평가](docs/changes/004-pixel-model-comparison/evaluation.md)를 참고하세요.
 
 ## 품질 범위
 
-알려진 문제: 초기 아이템 비교용 기본 프롬프트에 인물 억제 조건이 남아 있어 캐릭터 요청을 방해할 수 있습니다. 공통 기본값·아이템/캐릭터 프리셋·네거티브 편집은 [006 후속 작업](docs/changes/006-prompt-profiles/intent.md)에 기록했으며 아직 미구현입니다.
+[007 프롬프트 제어](docs/changes/007-prompt-controls/spec.md)에서 공통 기본값의 인물 억제를 분리하고 프리셋·전체 텍스트 대체·오프라인 확인을 구현했습니다. 단일 캐릭터의 요청 준수와 장기적인 동일 캐릭터 일관성은 별도로 평가합니다. 실제 검증·표현 한계는 [007 검증 기록](docs/changes/007-prompt-controls/evidence.md)을 따릅니다.
 
 규격 검사 통과와 그림의 완성도는 별개입니다. 현재 결과는 모두 시각 검토 대상으로 표시합니다. 전용 픽셀 LoRA의 첫 비교는 완료했습니다. 더 정교한 배경·격자 복원, 고정 스타일과 부분 편집은 후속 범위입니다.
 

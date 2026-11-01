@@ -9,6 +9,13 @@ from pixelart.pipeline import generate, import_image, resume
 from pixelart.project import Project
 from pixelart.providers.base import connect
 from pixelart.request import Request
+from pixelart.prompts import PRESETS, PROMPT_FIELDS, resolve_prompts, saved_prompts
+
+
+def prompt_options(command, preview=False):
+    command.add_argument("--prompt-preset", choices=PRESETS, default=None if preview else "common")
+    command.add_argument("--positive-prompt", help="Replace the entire composed positive prompt")
+    command.add_argument("--negative-prompt", help="Replace the entire negative prompt; empty string disables it")
 
 
 def parser():
@@ -32,6 +39,7 @@ def parser():
         command.add_argument("--method", choices=("nearest", "majority", "grid"), default="majority")
         command.add_argument("--palette", help="Comma-separated #RRGGBB colors")
         if name == "generate":
+            prompt_options(command)
             command.add_argument("--profile", type=Path)
             command.add_argument("--checkpoint", default="")
             command.add_argument("--lora", default="")
@@ -50,6 +58,10 @@ def parser():
     command.add_argument("--wait-seconds", type=float, default=180)
     command = sub.add_parser("inspect", help="Open portable project metadata without a generation server")
     command.add_argument("project", type=Path)
+    command = sub.add_parser("prompts", help="Preview prompts offline or inspect the actual saved workflow text")
+    command.add_argument("--project", type=Path)
+    command.add_argument("--prompt")
+    prompt_options(command, preview=True)
     return result
 
 
@@ -62,7 +74,7 @@ async def doctor(profile, checkpoint, lora="", vae=""):
 def summary(project):
     return {"project": str(project.root), "state": project.manifest["state"],
             "job_id": project.manifest.get("job_id"), "assets": project.manifest["assets"],
-            "quality": project.manifest["quality"]}
+            "quality": project.manifest["quality"], "prompts": saved_prompts(project)}
 
 
 def main(argv=None):
@@ -70,6 +82,16 @@ def main(argv=None):
     try:
         if args.command == "doctor":
             result = asyncio.run(doctor(Profile.load(args.profile), args.checkpoint, args.lora, args.vae))
+        elif args.command == "prompts":
+            edits = {key: getattr(args, key, None) for key in ("prompt", *sorted(PROMPT_FIELDS))}
+            if args.project is not None:
+                if any(value is not None for value in edits.values()):
+                    raise ValueError("--project cannot be combined with prompt editing options")
+                result = saved_prompts(Project.open(args.project))
+                if result is None:
+                    raise ValueError("project has no saved generation prompts")
+            else:
+                result = resolve_prompts(Request(**{key: value for key, value in edits.items() if value is not None}))
         elif args.command == "inspect":
             result = summary(Project.open(args.project))
         elif args.command == "resume":
@@ -87,6 +109,7 @@ def main(argv=None):
             if args.command == "generate":
                 values.update({name: getattr(args, name) for name in (
                     "checkpoint", "generation_size", "steps", "cfg", "lora", "lora_strength", "vae",
+                    "prompt_preset", "positive_prompt", "negative_prompt",
                 )})
                 if not 0 <= args.wait_seconds <= 3600:
                     raise ValueError("wait-seconds must be 0..3600")
