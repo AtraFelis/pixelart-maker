@@ -91,6 +91,8 @@ def check_existing(path: Path, expected: Request):
     actual = Request.from_dict(project.manifest["request"]).to_dict()
     if actual != expected.to_dict():
         raise ValueError("existing project settings differ; use a new comparison output directory")
+    if project.manifest["state"] == "review" and not project.manifest["assets"].get("workflow"):
+        raise ValueError("completed comparison requires a saved workflow; inspect it or use a new output directory")
     prompts = saved_prompts(project)
     if prompts is None:
         raise ValueError("existing project has no saved generation prompts; inspect it or use a new output directory")

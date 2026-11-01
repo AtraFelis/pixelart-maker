@@ -27,7 +27,7 @@ output/model-comparison의 v1 정의를 새 예제의 명시적 item v1 정의�
 - common: job 446caa93-369f-487c-b906-94f82f5af4f4, output/prompt-profiles/knight-common.
 - character: job edda0eda-eeff-45cd-a805-47a7a8a3b2e7, output/prompt-profiles/knight-character.
 - 두 결과의 nearest·majority·grid 후보 모두 크기·색 수·이진 알파·PNG 규격 통과. majority는 각각 16색이다. 격자 감지는 양쪽 8픽셀 간격이며 품질 판정으로 취급하지 않는다.
-- 작성 에이전트가 1024 원본, 실제 64픽셀 final, 16배 preview를 직접 확인했다. 금발·은색 갑옷·한 인물의 전신과 위를 향한 검은 양쪽에 나타났다. common은 손잡이와 수직 검이 비교적 명확하지만 얼굴이 작은 크기에서 뭉친다. character는 머리카락·갑옷 실루엣이 더 크고 읽히나 손잡이 아래에도 긴 날이 생겨 검 구조가 잘못됐다.
+- 작성 에이전트가 1024 원본, 실제 64픽셀 final, 16배 preview를 직접 확인했다. 두 결과 모두 금발·은색 갑옷을 입은 한 인물의 전신과 위를 향한 검이 나타났다. common은 손잡이와 수직 검이 비교적 명확하지만 얼굴이 작은 크기에서 뭉친다. character는 머리카락·갑옷 실루엣이 더 크고 읽히나 손잡이 아래에도 긴 날이 생겨 검 구조가 잘못됐다.
 - 두 그림 모두 팔을 앞으로 내민 자세에 가까워 가슴 앞의 엄숙한 검 경례를 정확히 충족하지 않는다. 정면 대신 약간의 측면 구도, 발밑 회색 그림자, 축소 후 손·얼굴 정보 손실도 남는다. 요청 충돌 수정의 완료와 아트 표현의 완성을 구분한다. 원본과 생성 프롬프트를 보존했고 자동 품질 상태는 requires_visual_review로 유지했다.
 - 이전 세 모델/여섯 아이템 비교 시트도 다시 열어 확인했다. 동일 item v1의 물약 라벨·사과 그림자·칼/열쇠 방향 문제는 기존 평가와 같다. 이번에는 18개를 다시 생성하지 않았다.
 
@@ -56,3 +56,15 @@ CodeRabbit 지적에 따른 테스트 보강 후 설치 패키지 기준 전체 
 ## 미검증 범위
 
 실제 다른 PC·원격 GPU·관리형 클라우드, 편집 UI, 동일 캐릭터·애니메이션·부분 편집은 이번 검사 범위 밖이다. 프롬프트 재현성은 모델의 픽셀별 동일 결과나 요청 자세 준수를 보장하지 않는다.
+
+## GitHub 리뷰 후속 — 2026-11-01
+
+2026-11-01T05:03:34Z [요청](https://github.com/AtraFelis/pixelart-maker/pull/6#issuecomment-6553700882) 후 완료까지 확인했다. 실제 review 5726587859는 05:13:15Z에 head 81df7fe83675a62cb275b4658557609adee30ed2로 제출됐고 Minor 2건이었다. 요약의 검토 커버리지와 요청 응답의 05:13:23Z Review finished도 확인했다.
+
+- 시각 관측 문장이 모호하다는 지적은 수용해 두 결과의 공통 특징이 명확한 문장으로 고쳤다. 뒤의 차이·검 구조·자세·축소 품질 한계는 유지했다.
+- 완료된 비교 프로젝트가 workflow 자산 없이 manifest snapshot만으로 재사용될 수 있다는 지적도 타당했다. tests/test_prompt_review.py에서 실제 완료 원본·결과를 가진 snapshot-only 프로젝트의 run_comparison이 거절돼야 하는데 ValueError not raised로 실패함을 먼저 재현했다. 같은 실행에서 확인된 작업의 수집·저장 원본의 오프라인 처리는 통과했다.
+- check_existing에서 review 상태에만 workflow 자산을 요구하도록 최소 수정했다. 기존 snapshot 조회·미완료 작업의 resume와 무재제출을 보존하고 같은 테스트를 유지한다. 관련 spec·plan도 이 경계를 명시했다.
+
+수정 후 같은 두 회귀 검사가 통과했다. UV_PROJECT_ENVIRONMENT=tmp/ci-validation에서 uv sync --locked --no-editable --reinstall-package pixelart-maker, uv run --no-sync python -m unittest discover -s tests -q를 실제 실행해 전체 73개가 통과했다. compileall -q src tests examples scripts, uv build --wheel, uv run --no-sync python scripts/smoke_cli.py도 모두 종료 코드 0이었다. tmp/check_docs.py로 문서 56개·로컬 링크 69개·관리/신규 파일 95개 공백 검사를 통과했다. 기존 실제 완료 결과 18개의 정의·요청·workflow 호환성을 다시 확인했고 project.json·workflow.json·original/source.png·final.png의 검사 전후 SHA-256이 동일했다.
+
+검토된 head 81df7fe의 기존 CI run 41271768414도 completed/success임을 다시 확인했다. 수정 head의 새 CI·스레드 답변·해결 결과는 PR에 기록하며, 수정 후 push가 CodeRabbit 재리뷰 완료를 뜻하지 않는다. 다음 요청 가능 시각은 마지막 정상 요청 기준 2026-11-01 15:03:34 Asia/Seoul이다. 이 변경은 생성 프롬프트·후처리·기존 원본·모델에 영향을 주지 않아 GPU 생성은 다시 하지 않았다.
