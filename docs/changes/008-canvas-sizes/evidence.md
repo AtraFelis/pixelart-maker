@@ -29,3 +29,9 @@
 ## 남은 확인과 범위
 
 최종 비편집 잠금 설치 후 전체 95개 테스트·compileall·wheel·설치 CLI 검사가 다시 종료 코드 0으로 통과했다. 문서 60개·로컬 링크 75개·관리/신규 파일 100개 공백 검사도 통과했다. CodeRabbit CLI 0.9.2로 coderabbit review --agent --base origin/main --include-untracked를 실행해 완료까지 확인했다. 17개 파일, findings=0, outcome=completed, 종료 코드 0으로 완료됐다. 원본 로그는 Git에서 제외된 tmp/coderabbit-canvas-review.log에 보관한다. PR과 실제 GitHub CI/리뷰는 제출 후 별도로 확인한다. 실제 다른 PC·원격 GPU·타일 생성·UI·새 모델과 배경/팔레트 알고리즘 개선은 이번 작업의 구현/검증 범위 밖이다.
+
+## PR과 실제 CI
+
+[PR #7](https://github.com/AtraFelis/pixelart-maker/pull/7)을 codex/008-canvas-sizes → main으로 제출했다. 기능 커밋 f5764ce2bb49ea70aabf3ed76019c9c8b4b10bcf의 [CI run 41329003023](https://github.com/AtraFelis/pixelart-maker/actions/runs/41329003023)에서 Windows/Linux × Python 3.11/3.12/3.13 여섯 조합 모두 completed/success를 확인했다. 각 조합은 잠금 비편집 설치·전체 테스트·문법·wheel·설치 CLI 스모크를 실행한다.
+
+이 문서는 해당 기능 커밋의 증거다. 이 기록만 추가한 커밋의 CI와 GitHub CodeRabbit 리뷰는 PR에서 최신 SHA로 별도 확인한다. PR 전 로컬 CodeRabbit의 지적 0건과 GitHub 전체 리뷰 완료는 구별한다. 정상 요청 간격은 기존 coderabbit 예약의 저장소 전체 60분 제한을 유지하고 유료 크레딧·자동 병합을 사용하지 않는다.
